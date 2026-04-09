@@ -10,310 +10,295 @@
 <title>Ollie's Recipes</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#FAFBFC;color:#1E293B;-webkit-user-select:none;user-select:none;padding-bottom:env(safe-area-inset-bottom)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#FAFBFC;color:#1E293B;-webkit-user-select:none;user-select:none}
 :root{--teal:#00A896;--teal-light:#E6FAF7;--dark:#1E293B;--muted:#94A3B8;--border:#E2E8F0;--card:#FFF;--bg:#FAFBFC;--green:#10B981;--amber:#F59E0B}
 button{font-family:inherit;cursor:pointer;-webkit-appearance:none;border:none}
-
+input{font-family:inherit;-webkit-appearance:none}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
+.tab{flex:1;padding:10px 0 6px;text-align:center;color:var(--muted);font-size:10px;font-weight:600;transition:color .15s}
+.tab.active{color:var(--teal)}
+.tab-icon{font-size:22px;margin-bottom:2px}
+.app-wrap{padding-bottom:80px}
 .app-header{background:var(--teal);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top));color:#fff;position:sticky;top:0;z-index:100}
-.app-title{font-size:22px;font-weight:700;letter-spacing:-0.5px}
-.app-sub{font-size:12px;opacity:0.8;margin-top:2px}
-
+.app-title{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.app-sub{font-size:12px;opacity:.8;margin-top:2px}
+.header-btn{background:rgba(255,255,255,.2);color:#fff;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:10px;display:inline-block}
 .search-bar{padding:12px 20px;position:sticky;top:72px;z-index:90;background:var(--bg)}
 .search-input{width:100%;padding:12px 16px 12px 42px;border-radius:12px;border:1px solid var(--border);font-size:16px;background:var(--card);outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%2394A3B8' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
-
-.tags-row{padding:0 20px 12px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tags-row::-webkit-scrollbar{display:none}
-.tag{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;background:#F1F5F9;color:var(--muted);flex-shrink:0;transition:all .15s}
+.tags-row{padding:0 20px 12px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}.tags-row::-webkit-scrollbar{display:none}
+.tag{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;background:#F1F5F9;color:var(--muted);flex-shrink:0}
 .tag.active{background:var(--teal);color:#fff}
-
 .recipe-list{padding:0 20px 20px}
-.recipe-card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .15s}
-.recipe-card:active{transform:scale(.98)}
-.card-header{display:flex;justify-content:space-between;align-items:flex-start}
+.recipe-card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.recipe-card:active{transform:scale(.98);transition:transform .1s}
+.card-header{display:flex;align-items:flex-start}
 .card-emoji{font-size:28px;margin-right:12px;flex-shrink:0}
 .card-info{flex:1}
-.card-title{font-size:16px;font-weight:700;line-height:1.2;color:var(--dark)}
-.card-meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+.card-title{font-size:16px;font-weight:700;line-height:1.2}
+.card-meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:12px}
 .card-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .card-tag{font-size:10px;padding:3px 8px;border-radius:6px;background:#F1F5F9;color:var(--muted);font-weight:600}
-.card-cals{font-size:14px;font-weight:700;color:var(--teal);white-space:nowrap}
-
-.recipe-detail{display:none;padding:0 20px 40px}
-.recipe-detail.open{display:block}
-.back-btn{background:#F1F5F9;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;color:var(--dark);margin-bottom:16px;display:inline-block}
-.detail-title{font-size:24px;font-weight:700;color:var(--dark);margin-bottom:4px}
-.detail-meta{font-size:14px;color:var(--muted);margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap}
+.card-cals{font-size:14px;font-weight:700;color:var(--teal);white-space:nowrap;margin-left:8px}
+.back-btn{background:#F1F5F9;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;color:var(--dark);margin:16px 20px;display:inline-block}
+.detail-wrap{padding:0 20px 40px}
 .detail-section{font-size:16px;font-weight:700;color:var(--teal);margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--teal-light)}
-.ingredient{padding:6px 0;font-size:15px;border-bottom:1px solid #F1F5F9;display:flex;align-items:flex-start;gap:8px}
+.ingredient{padding:6px 0;font-size:15px;border-bottom:1px solid #F1F5F9;display:flex;gap:8px}
 .ingredient::before{content:"•";color:var(--teal);font-weight:700;flex-shrink:0}
 .step{padding:10px 0;font-size:15px;line-height:1.5;border-bottom:1px solid #F1F5F9;display:flex;gap:10px}
 .step-num{background:var(--teal);color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-top:1px}
 .tip-box{background:var(--teal-light);border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14px;line-height:1.4;color:#0D7466}
-
 .servings-ctrl{display:flex;align-items:center;gap:12px;margin:12px 0;background:#F1F5F9;padding:10px 16px;border-radius:10px}
-.servings-ctrl span{font-size:14px;font-weight:600;color:var(--dark)}
+.servings-ctrl span{font-size:14px;font-weight:600}
 .serv-btn{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.serv-num{font-size:18px;font-weight:700;color:var(--teal);min-width:24px;text-align:center;font-variant-numeric:tabular-nums}
-
+.serv-num{font-size:18px;font-weight:700;color:var(--teal);min-width:24px;text-align:center}
+.plan-section{padding:16px 20px 20px}
+.day-card{background:var(--card);border-radius:14px;margin-bottom:16px;border:1px solid var(--border);overflow:hidden}
+.day-header{background:var(--teal);color:#fff;padding:12px 16px;font-weight:700;font-size:15px;display:flex;justify-content:space-between}
+.day-cals{font-size:12px;opacity:.8;font-weight:400}
+.meal-slot{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.meal-slot:last-child{border-bottom:none}
+.meal-type{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;width:65px;flex-shrink:0}
+.meal-name{font-size:14px;font-weight:600;flex:1}
+.meal-sub{font-size:11px;color:var(--muted)}
+.meal-leftover{font-size:11px;color:var(--amber);font-weight:600}
+.meal-cal{font-size:13px;color:var(--teal);font-weight:600;flex-shrink:0}
+.swap-btn{width:28px;height:28px;border-radius:50%;background:#F1F5F9;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.shop-section{padding:16px 20px 20px}
+.shop-cat-header{font-size:14px;font-weight:700;color:var(--teal);padding:8px 0;border-bottom:2px solid var(--teal-light);margin-bottom:8px;margin-top:16px}
+.shop-item{padding:10px 0;font-size:15px;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;gap:10px}
+.shop-check{width:26px;height:26px;border-radius:7px;border:2px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;flex-shrink:0}
+.shop-check.done{background:var(--teal);border-color:var(--teal);color:#fff}
+.shop-text{flex:1}.shop-text.done{text-decoration:line-through;color:var(--muted)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty-state .emoji{font-size:48px;margin-bottom:12px}
-.empty-state p{font-size:15px}
-
-.random-btn{position:fixed;bottom:24px;right:24px;bottom:calc(24px + env(safe-area-inset-bottom));background:var(--teal);color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 12px rgba(0,168,150,.4);z-index:80}
 .count-badge{text-align:center;padding:8px;font-size:13px;color:var(--muted)}
+.random-btn{position:fixed;bottom:90px;right:20px;background:var(--teal);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(0,168,150,.4);z-index:80}
+.snack-row{padding:10px 16px;background:#FEFCE8;font-size:13px;color:#A16207;font-weight:500;border-top:1px solid var(--border)}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 const R=[
-{n:"Spinach & Feta Omelette",e:"🍳",cal:500,time:10,serves:1,cat:["breakfast"],tags:["quick","eggs","weeknight"],vibe:["comfort"],
-ing:["3 eggs","Handful of spinach","30g feta, crumbled","4-5 cherry tomatoes, halved","1 slice sourdough","½ avocado","Olive oil, salt, pepper"],
-steps:["Whisk eggs with salt and pepper.","Heat olive oil in a non-stick pan over medium heat.","Pour in eggs. As edges set, push inward, tilting pan to let uncooked egg flow to edges.","When mostly set but still slightly wet, scatter spinach and feta over one half.","Fold over, slide onto plate. Serve with sourdough toast, tomatoes, and avocado."],tips:[]},
-
-{n:"Halloumi Wrap",e:"🧀",cal:450,time:10,serves:1,cat:["lunch"],tags:["quick","halloumi","under-15-mins"],vibe:["light"],
-ing:["80g halloumi, sliced into strips","1 wholemeal wrap","Handful of spinach","½ pepper, sliced","2 tbsp hummus","Squeeze of lemon"],
-steps:["Dry-fry halloumi strips in a hot pan for 1-2 mins each side until golden. No oil needed.","Warm the wrap briefly in the same pan.","Spread hummus down the centre, top with spinach, peppers, halloumi, and lemon. Roll up."],tips:[]},
-
-{n:"Red Lentil Dhal",e:"🍲",cal:480,time:25,serves:4,cat:["dinner","batch-cook"],tags:["one-pot","lentils","freezer-friendly","vegan"],vibe:["comfort","warming"],
-ing:["250g red lentils, rinsed","1 tin chopped tomatoes","1 onion, diced","3 cloves garlic, minced","Thumb of fresh ginger, grated","1 tsp turmeric","1 tsp cumin","1 tsp smoked paprika","Big handful of spinach","500ml vegetable stock","Brown rice to serve"],
-steps:["Heat olive oil in a large pot. Sauté onion 3-4 mins until soft.","Add garlic, ginger, turmeric, cumin, paprika. Stir 1 min until fragrant.","Add lentils, tomatoes, and stock. Bring to boil, reduce to simmer.","Cook 18-20 mins, stirring occasionally, until lentils are soft. Add water if too thick.","Stir through spinach until wilted. Season with salt and pepper.","Serve over brown rice."],tips:["Make double — freezes brilliantly.","Cook your batch of brown rice at the same time."]},
-
-{n:"Overnight Oats",e:"🥣",cal:420,time:3,serves:1,cat:["breakfast"],tags:["quick","prep-ahead","no-cook"],vibe:["healthy"],
-ing:["50g porridge oats","150ml milk or water","2 tbsp Greek yoghurt","1 tbsp chia seeds","Handful of frozen berries","1 tbsp almond butter"],
-steps:["Night before: combine oats, milk, yoghurt, and chia seeds in a jar. Stir.","Top with frozen berries (they thaw overnight).","In the morning, stir and top with almond butter. Eat cold."],tips:["Vary toppings: banana + walnuts + honey, or mango + coconut."]},
-
-{n:"Sweet Potato & Black Bean Burrito Bowls",e:"🌯",cal:550,time:30,serves:2,cat:["dinner"],tags:["oven","sweet-potato","black-beans"],vibe:["filling","tex-mex"],
-ing:["2 sweet potatoes, diced 2cm cubes","1 tin black beans, drained","150g quinoa","1 tsp cumin","1 tsp smoked paprika","1 avocado, sliced","50g feta, crumbled","Cherry tomatoes, halved","Olive oil, salt, pepper"],
-steps:["Preheat oven to 200°C. Toss sweet potato with oil, salt, pepper. Roast 25 mins.","Cook quinoa: rinse, add to pan with 300ml water, boil, cover, simmer 15 mins. Fluff.","Warm black beans with cumin and smoked paprika for 3-4 mins.","Assemble bowls: quinoa, sweet potato, beans, avocado, feta, tomatoes."],tips:["Cook extra quinoa for tomorrow's lunch."]},
-
-{n:"Scrambled Eggs with Mushrooms & Kale",e:"🍄",cal:400,time:10,serves:1,cat:["breakfast"],tags:["quick","eggs"],vibe:["comfort"],
-ing:["3 eggs","100g chestnut mushrooms, sliced","Handful of kale, stalks removed, torn","1 slice sourdough","Butter or olive oil"],
-steps:["Heat butter in a pan. Fry mushrooms 3-4 mins until golden.","Add kale, stir 1-2 mins until wilted. Push to one side.","Whisk eggs, pour into clear side. Stir gently over low heat until just set.","Serve on sourdough with mushrooms and kale."],tips:[]},
-
-{n:"Quinoa, Chickpea & Avocado Bowl",e:"🥗",cal:500,time:10,serves:1,cat:["lunch"],tags:["quick","chickpeas","bowl"],vibe:["healthy","light"],
-ing:["Leftover quinoa","½ tin chickpeas, drained","1 tsp smoked paprika","Handful of spinach","½ avocado","1 tbsp tahini","Juice of ½ lemon","Splash of water"],
-steps:["Pan-fry chickpeas with paprika and salt for 5 mins until crispy.","Mix tahini, lemon juice, and water to make dressing.","Assemble: quinoa, spinach, chickpeas, avocado, tahini dressing."],tips:[]},
-
-{n:"Chickpea & Spinach Curry",e:"🍛",cal:480,time:20,serves:4,cat:["dinner","batch-cook"],tags:["one-pot","chickpeas","freezer-friendly","vegan"],vibe:["comfort","warming"],
-ing:["2 tins chickpeas, drained","1 tin chopped tomatoes","1 onion, diced","3 cloves garlic, minced","Thumb of ginger, grated","1 tsp turmeric","1 tsp cumin","1 tsp garam masala","½ tsp chilli flakes (optional)","Big handful of spinach","Brown rice to serve"],
-steps:["Heat oil. Sauté onion 3-4 mins.","Add garlic, ginger, all spices. Stir 1 min.","Add tomatoes and chickpeas. Simmer 12-15 mins until thick.","Stir through spinach. Season well.","Serve over brown rice."],tips:["Make double. Freezes perfectly."]},
-
-{n:"Halloumi & Roasted Veg Traybake",e:"🧀",cal:500,time:25,serves:2,cat:["dinner"],tags:["oven","halloumi","easy"],vibe:["comfort","friday-night"],
-ing:["200g halloumi, thick slabs","2 courgettes, half-moons","2 peppers, chunked","1 red onion, wedges","Cherry tomatoes, whole","1 tsp smoked paprika","Olive oil, salt, pepper","Wraps or rice to serve"],
-steps:["Preheat oven 200°C. Spread veg on baking tray, drizzle oil, paprika, salt, pepper.","Roast 15 mins.","Nestle halloumi among veg. Return to oven 10 mins until golden.","Serve from the tray with wraps or rice."],tips:["Zero-effort Friday meal. One tray, minimal washing up."]},
-
-{n:"Kitchen Sink Omelette",e:"🍳",cal:450,time:10,serves:1,cat:["breakfast"],tags:["quick","eggs","use-up-veg"],vibe:["comfort"],
-ing:["3 eggs","Mushrooms, peppers, any leftover veg","Grated cheddar"],
-steps:["Same technique as spinach omelette. Use whatever veg needs eating.","Grate cheddar over the top before folding."],tips:["The fridge-clearing breakfast."]},
-
-{n:"Black Bean Quesadillas",e:"🫘",cal:500,time:10,serves:1,cat:["lunch"],tags:["quick","black-beans","under-15-mins"],vibe:["tex-mex","comfort"],
-ing:["2 wholemeal wraps","½ tin black beans, lightly mashed","Grated cheddar","½ pepper, finely diced","Avocado to serve"],
-steps:["Lay one wrap in a dry pan over medium heat.","Spread mashed beans, scatter cheese and peppers. Top with second wrap.","Cook 3-4 mins until golden. Flip. Cook 3 more mins.","Slice into wedges. Serve with avocado."],tips:[]},
-
-{n:"Mushroom, Courgette & Edamame Stir-Fry",e:"🥢",cal:420,time:15,serves:2,cat:["dinner"],tags:["quick","stir-fry","under-20-mins"],vibe:["light","asian"],
-ing:["200g chestnut mushrooms, sliced","1 courgette, half-moons","150g frozen edamame, thawed","2 cloves garlic, sliced","Thumb of ginger, grated","2 tbsp soy sauce","1 tsp sesame oil","Brown rice to serve"],
-steps:["Heat oil in wok over high heat.","Stir-fry mushrooms and courgette 3-4 mins until colouring.","Add garlic, ginger, edamame. Stir-fry 2 mins.","Add soy sauce and sesame oil. Toss 1 min.","Serve over brown rice."],tips:[]},
-
-{n:"Porridge with Banana, Blueberries & Walnuts",e:"🥣",cal:400,time:8,serves:1,cat:["breakfast"],tags:["quick"],vibe:["healthy","comfort"],
-ing:["50g porridge oats","250ml milk or water","1 banana, sliced","Handful of fresh blueberries","Handful of walnuts","Drizzle of honey"],
-steps:["Combine oats and milk in pan. Cook over medium heat, stirring, 5-6 mins until thick and creamy.","Top with banana, blueberries, walnuts, and honey."],tips:[]},
-
-{n:"Beetroot, Feta & Lentil Salad",e:"🥬",cal:380,time:10,serves:1,cat:["lunch"],tags:["quick","lentils","no-cook"],vibe:["healthy","light"],
-ing:["2 raw beetroot, peeled and grated","½ tin green lentils, drained","50g feta, crumbled","Handful of pumpkin seeds","Handful of spinach","Juice of 1 lemon","Olive oil, salt, pepper"],
-steps:["Toss beetroot, lentils, and spinach in a bowl.","Dress with lemon juice, olive oil, salt, pepper.","Top with feta and pumpkin seeds."],tips:[]},
-
-{n:"Roasted Veg & Lentil Soup",e:"🥣",cal:450,time:35,serves:4,cat:["dinner","batch-cook"],tags:["oven","lentils","freezer-friendly","fridge-clear-out"],vibe:["comfort","warming"],
-ing:["Whatever veg is left: sweet potato, onion, peppers, courgette","100g red lentils","1 tin chopped tomatoes","600ml vegetable stock","2 cloves garlic","1 tsp cumin","Sourdough to serve"],
-steps:["Preheat oven 200°C. Chop all veg, toss with oil and cumin. Roast 20 mins.","Simmer red lentils in stock for 15 mins.","Add roasted veg and tomatoes to lentil pot.","Blend half with stick blender for chunky texture.","Season well. Serve with sourdough."],tips:["The Sunday reset meal. Use whatever needs eating."]},
-
-{n:"Dal Makhani",e:"🫘",cal:380,time:45,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","freezer-friendly","lentils"],vibe:["comfort","warming","weekend-project"],
-ing:["200g whole black urad dal, soaked overnight","50g dried kidney beans, soaked overnight","1 tin chopped tomatoes","2 onions, finely diced","5 cloves garlic, minced","Thumb of ginger, grated","2 tbsp butter","1 tbsp oil","1 tsp cumin seeds","2 dried red chillies","1 tsp turmeric","1 tsp garam masala","1 tsp smoked paprika","½ tsp chilli powder","100ml double cream or cashew cream","800ml water","Fresh coriander"],
-steps:["Drain and rinse soaked dal and beans.","Heat oil and 1 tbsp butter on sauté. Add cumin seeds and chillies — sizzle 30 secs.","Add onions. Cook 6-8 mins until golden brown. Don't rush this.","Add garlic and ginger. Stir 1 min.","Add turmeric, garam masala, paprika, chilli powder. Stir 30 secs.","Add tomatoes. Cook 3-4 mins until oil separates.","Add dal, beans, water, salt. Stir.","Pressure cook high 25 mins. Natural release 10 mins.","Mash some dal against the pot to thicken.","Stir in remaining butter and cream. Simmer 5 mins.","Finish with coriander."],tips:["Add a cinnamon stick and 2-3 cloves with the cumin seeds for extra depth.","The king of dals. Worth every minute."]},
-
-{n:"Chana Masala",e:"🫘",cal:340,time:35,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","chickpeas","freezer-friendly","vegan"],vibe:["comfort","warming"],
-ing:["300g dried chickpeas, soaked overnight","1 tin chopped tomatoes","2 onions, finely diced","4 cloves garlic, minced","Thumb of ginger","2 green chillies, slit","2 tbsp oil","1 tsp cumin seeds","2 bay leaves","1 cinnamon stick","3-4 cloves","1 tsp turmeric","2 tsp coriander powder","1 tsp cumin powder","1 tsp garam masala","½ tsp amchur or juice of 1 lemon","500ml water","Fresh coriander"],
-steps:["Drain and rinse chickpeas.","Heat oil on sauté. Add cumin seeds, bay, cinnamon, cloves. Sizzle 30 secs.","Add onions. Cook 6-8 mins until deeply golden.","Add garlic, ginger, chillies. Stir 1 min.","Add turmeric, coriander, cumin powder. Stir 30 secs.","Add tomatoes. Cook 4-5 mins, mashing down, until thick.","Add chickpeas, water, salt.","Pressure cook high 18 mins. Natural release 10 mins.","Mash a handful of chickpeas to thicken.","Add garam masala and amchur. Simmer 5 mins.","Finish with coriander."],tips:["Dried chickpeas under pressure come out nutty and firm — completely different from tinned."]},
-
-{n:"Rajma Masala",e:"🫘",cal:360,time:40,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","kidney-beans","freezer-friendly"],vibe:["comfort","warming"],
-ing:["300g dried red kidney beans, soaked overnight (minimum 8 hours)","1 tin chopped tomatoes","2 onions, finely diced","4 cloves garlic, minced","Thumb of ginger","2 tbsp oil","1 tsp cumin seeds","2 bay leaves","1 tsp turmeric","2 tsp coriander powder","1 tsp cumin powder","1 tsp garam masala","½ tsp chilli powder","600ml water","1 tbsp butter","Fresh coriander"],
-steps:["Drain and rinse kidney beans. Discard soaking water.","Heat oil on sauté. Add cumin seeds and bay leaves. Sizzle 30 secs.","Add onions. Cook 6-8 mins until golden.","Add garlic, ginger. Stir 1 min.","Add turmeric, coriander, cumin, chilli powder. Stir 30 secs.","Add tomatoes. Cook 4-5 mins until thick.","Add beans, water, salt.","Pressure cook high 20 mins. Natural release 15 mins.","Mash a quarter of beans to thicken.","Stir in garam masala and butter. Simmer 5 mins.","Finish with coriander."],tips:["Overnight soak is non-negotiable — kidney beans contain lectins that must be destroyed."]},
-
-{n:"Sambar",e:"🥘",cal:280,time:25,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","south-indian","lentils","vegan"],vibe:["light","warming","healthy"],
-ing:["150g toor dal (or red lentils)","1 small sweet potato, cubed","1 carrot, diced","100g green beans, 2cm pieces","1 small aubergine, cubed","1 onion, diced","2 tomatoes, chopped","1 tbsp tamarind paste","2 tbsp sambar powder","½ tsp turmeric","600ml water","FOR TADKA: 1 tbsp coconut oil, 1 tsp mustard seeds, 1 tsp cumin seeds, 8-10 curry leaves, 2 dried red chillies, ½ tsp asafoetida"],
-steps:["Rinse toor dal until water runs clear.","Add dal, all veg, tomatoes, turmeric, water to pressure cooker.","Pressure cook high 8 mins. Quick release.","Mash dal lightly — veg should keep texture.","Add tamarind and sambar powder. Simmer 5 mins.","Tadka: heat coconut oil, add mustard seeds — when popping, add cumin, curry leaves, chillies, asafoetida. Sizzle 20-30 secs.","Pour tadka into sambar. Stir through."],tips:["The tadka at the end is what makes this sing.","Swap veg for whatever needs using up."]},
-
-{n:"Mexican Black Bean Soup",e:"🥣",cal:310,time:35,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["mexican","black-beans","freezer-friendly","vegan"],vibe:["comfort","warming"],
-ing:["300g dried black beans, soaked overnight","1 tin chopped tomatoes","2 onions, diced","4 cloves garlic, minced","2 tbsp oil","2 tsp cumin","1 tsp smoked paprika","1 tsp coriander powder","1-2 chipotle chillies in adobo, chopped, plus 1 tbsp sauce","800ml vegetable stock","Juice of 2 limes","Avocado, yoghurt, coriander to serve"],
-steps:["Drain and rinse black beans.","Heat oil on sauté. Add onions, cook 5 mins.","Add garlic, cumin, paprika, coriander. Stir 1 min.","Add chipotle and adobo sauce. Stir 30 secs.","Add beans, tomatoes, stock.","Pressure cook high 20 mins. Natural release 10 mins.","Blend roughly half with stick blender — thick but chunky.","Stir in lime juice and salt.","Serve with avocado, yoghurt, coriander."],tips:["Leftover chipotles keep for weeks in a jar in the fridge.","The lime is essential — it lifts everything."]},
-
-{n:"Moroccan Chickpea & Sweet Potato Tagine",e:"🍲",cal:370,time:30,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["moroccan","chickpeas","sweet-potato","freezer-friendly"],vibe:["warming","weekend-project"],
-ing:["300g dried chickpeas, soaked overnight","2 sweet potatoes, cubed 3cm","1 tin chopped tomatoes","2 onions, diced","4 cloves garlic, minced","Thumb of ginger","2 tbsp oil","2 tbsp harissa paste","1 tsp cumin","1 tsp coriander powder","1 tsp cinnamon","½ tsp turmeric","80g dried apricots, chopped","400ml stock","Juice of 1 lemon","Coriander and flaked almonds to finish"],
-steps:["Drain and rinse chickpeas.","Heat oil on sauté. Onions 5 mins until soft.","Add garlic, ginger, harissa, cumin, coriander, cinnamon, turmeric. Stir 1 min.","Add tomatoes. Cook 2-3 mins.","Add chickpeas, sweet potato, apricots, stock, salt.","Pressure cook high 15 mins. Natural release 10 mins.","Sweet potato thickens the sauce naturally.","Stir in lemon juice. Adjust seasoning.","Serve over couscous with coriander and almonds."],tips:["Preserved lemons add incredible depth if you can find them."]},
-
-{n:"Ethiopian Misir Wot",e:"🍲",cal:320,time:30,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["ethiopian","lentils","freezer-friendly","vegan"],vibe:["warming","adventurous"],
-ing:["250g red lentils, rinsed","3 onions, very finely diced","4 cloves garlic, minced","Thumb of ginger","3 tbsp oil","2-3 tbsp berbere spice mix","1 tbsp tomato purée","½ tsp turmeric","600ml water"],
-steps:["Heat oil on sauté. Add onions. Cook 10-12 mins until deeply golden. Don't rush this.","Add garlic, ginger. Stir 1 min.","Add berbere, tomato purée, turmeric. Stir 1 min until fragrant and oil turns red.","Add lentils and water.","Pressure cook high 8 mins. Quick release.","Stir well — should be thick and smooth. Add water if needed.","Season with salt. Serve over rice or with flatbread."],tips:["Berbere is the key — buy it pre-made from a spice shop or Amazon.","If you can't find berbere: 2 tsp hot paprika + 1 tsp cumin + ½ tsp coriander + ½ tsp fenugreek + ½ tsp cinnamon + ¼ tsp cardamom."]},
-
-{n:"Tuscan White Bean Stew",e:"🫘",cal:350,time:35,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["italian","cannellini","freezer-friendly"],vibe:["comfort","warming"],
-ing:["300g dried cannellini beans, soaked overnight","1 tin chopped tomatoes","200g cavolo nero or kale, chopped","2 onions, diced","4 cloves garlic, minced","2 sticks celery, diced","1 carrot, diced","2 tbsp olive oil","2 sprigs rosemary","1 parmesan rind","1 tsp smoked paprika","½ tsp chilli flakes","800ml stock","Good olive oil and parmesan to finish"],
-steps:["Drain and rinse beans.","Heat oil on sauté. Onions, celery, carrot 5 mins.","Add garlic, rosemary, paprika, chilli flakes. Stir 1 min.","Add tomatoes. Cook 2 mins.","Add beans, stock, parmesan rind, salt.","Pressure cook high 18 mins. Natural release 10 mins.","Remove parmesan rind and rosemary stalks.","Stir in cavolo nero. Simmer 5 mins.","Mash a few beans to thicken.","Serve with good olive oil and grated parmesan."],tips:["Save every parmesan rind in a freezer bag — they're gold in soups and stews.","This is genuinely better after freezing and reheating."]},
-
-{n:"Proper Vegetarian Chilli",e:"🌶️",cal:380,time:40,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["mexican","black-beans","pinto-beans","freezer-friendly"],vibe:["comfort","warming","crowd-pleaser"],
-ing:["150g dried pinto beans, soaked overnight","150g dried black beans, soaked overnight","1 tin chopped tomatoes","2 peppers, diced","2 onions, diced","4 cloves garlic","2 tbsp oil","2 tsp cumin","2 tsp smoked paprika","1 tsp coriander powder","1 tsp oregano","1-2 chipotle in adobo, chopped, plus 1 tbsp sauce","1 tbsp tomato purée","20g dark chocolate 70%+","500ml stock","Juice of 1 lime","Rice, avocado, yoghurt, coriander to serve"],
-steps:["Drain and rinse both beans.","Heat oil on sauté. Onions and peppers 5 mins.","Add garlic, cumin, paprika, coriander, oregano. Stir 1 min.","Add chipotle, adobo sauce, tomato purée. Stir 30 secs.","Add tomatoes. Cook 2 mins.","Add beans, stock, salt.","Pressure cook high 20 mins. Natural release 10 mins.","Stir in dark chocolate until melted.","Mash a handful of beans. Add lime juice. Simmer 5 mins.","Serve with rice, avocado, yoghurt, coriander."],tips:["The dark chocolate rounds out the smoky heat — doesn't taste chocolatey, just velvety.","This is the one where people don't notice there's no meat."]},
-
-{n:"Split Pea & Smoked Paprika Soup",e:"🥣",cal:290,time:25,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["soup","split-peas","freezer-friendly","vegan","cheap"],vibe:["comfort","warming"],
-ing:["300g green split peas (no soaking)","2 onions, diced","3 cloves garlic, minced","2 carrots, diced","2 sticks celery, diced","2 tbsp olive oil","2 tsp smoked paprika","1 tsp cumin","½ tsp turmeric","1 litre stock","Juice of 1 lemon"],
-steps:["Rinse split peas until clear.","Heat oil on sauté. Onions, carrots, celery 5 mins.","Add garlic, paprika, cumin, turmeric. Stir 1 min.","Add split peas and stock.","Pressure cook high 15 mins. Natural release 10 mins.","Stir well — peas will have broken down.","Blend half for smooth, or leave rustic.","Add lemon juice. Season generously.","Serve with sourdough."],tips:["Freezes flat in zip-lock bags — stack them in the freezer.","Practically free to make and incredibly filling."]},
-
-{n:"Air Fryer Chips",e:"🍟",cal:250,time:22,serves:2,cat:["air-fryer","sides"],tags:["chips","air-fryer","healthy"],vibe:["comfort"],
-ing:["4 medium potatoes, skin on, cut into chunky chips","½ tbsp olive oil","Salt and chosen seasoning"],
-steps:["Soak chips in cold water 20 mins. This is the step that makes the difference.","Drain and dry thoroughly with a tea towel.","Toss in olive oil, salt, and seasoning.","Single layer in air fryer drawer. Don't overcrowd.","190°C, 20-22 mins. Shake at 10 mins."],tips:["Seasonings: rosemary + garlic salt, smoked paprika + cayenne, za'atar + lemon zest, cajun, or malt vinegar + salt."]},
-
-{n:"Chips + Halloumi Steaks",e:"🧀",cal:520,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","halloumi","air-fryer"],vibe:["friday-night","comfort"],
-ing:["Chips (see chip recipe)","200g halloumi, thick slabs","Salad and sweet chilli to serve"],
-steps:["Start chips in Drawer 1: 190°C, 20 mins.","12 mins in, add halloumi to Drawer 2: 200°C, 8 mins.","Both finish together. Serve with salad and sweet chilli."],tips:[]},
-
-{n:"Chips + Spiced Cauliflower",e:"🥦",cal:380,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","cauliflower","air-fryer","vegan"],vibe:["healthy","comfort"],
-ing:["Chips (see chip recipe)","1 cauliflower, broken into florets","1 tsp cumin","1 tsp smoked paprika","Olive oil","Tahini dressing and pickled red onion to serve"],
-steps:["Start chips in Drawer 1: 190°C, 20 mins.","5 mins in, add cauliflower (tossed in cumin, paprika, oil) to Drawer 2: 190°C, 15 mins.","Serve with tahini dressing and pickled red onion."],tips:[]},
-
-{n:"Chips + Portobello Mushroom Burgers",e:"🍔",cal:420,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","mushroom","air-fryer"],vibe:["comfort","friday-night"],
-ing:["Chips (see chip recipe)","4 large portobello caps","Garlic, soy sauce, smoked paprika","Buns or wraps, avocado to serve"],
-steps:["Start chips in Drawer 1: 190°C, 20 mins.","10 mins in, add portobello caps (brushed with garlic, soy, paprika) to Drawer 2: 190°C, 10 mins.","Serve in buns or wraps with avocado."],tips:[]},
-
-{n:"Chips + Crispy Tofu",e:"🍟",cal:450,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","tofu","air-fryer","vegan"],vibe:["asian","comfort"],
-ing:["Chips (see chip recipe)","300g firm tofu, pressed and cubed","2 tbsp cornflour","Soy and sriracha dipping sauce"],
-steps:["Start chips in Drawer 1: 190°C, 20 mins.","5 mins in, add cornflour-tossed tofu to Drawer 2: 200°C, 15 mins.","Serve with soy and sriracha dip."],tips:[]},
-
-{n:"Chips + Falafel",e:"🧆",cal:500,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","falafel","air-fryer"],vibe:["comfort","middle-eastern"],
-ing:["Chips (see chip recipe)","Falafel (frozen or homemade)","Pitta, hummus, salad to serve"],
-steps:["Start chips in Drawer 1: 190°C, 20 mins.","8 mins in, add falafel to Drawer 2: 190°C, 12 mins.","Serve with pitta, hummus, salad. Basically a kebab."],tips:[]},
-
-{n:"Sweet Potato Chips + Black Bean Burgers",e:"🍔",cal:480,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","sweet-potato","black-beans","air-fryer"],vibe:["comfort","tex-mex"],
-ing:["2 sweet potatoes, cut into chips","Olive oil, salt","For burgers: 1 tin black beans mashed, oats, cumin, smoked paprika, 1 egg"],
-steps:["Start sweet potato chips in Drawer 1: 190°C, 18 mins.","6 mins in, add black bean patties to Drawer 2: 190°C, 12 mins. Flip halfway.","Serve in buns with all the trimmings."],tips:[]},
-
-{n:"Charred Broccoli",e:"🥦",cal:120,time:8,serves:2,cat:["sides","air-fryer"],tags:["quick","air-fryer","vegan"],vibe:["healthy"],
-ing:["1 head broccoli, cut into florets","Olive oil","Lemon juice","Grated parmesan"],
-steps:["Toss florets in oil.","190°C, 8 mins.","Squeeze of lemon and parmesan after."],tips:["Life-changing compared to oven broccoli."]},
-
-{n:"Miso Aubergine",e:"🍆",cal:180,time:10,serves:2,cat:["sides","air-fryer"],tags:["air-fryer","japanese"],vibe:["healthy","asian"],
-ing:["2 aubergines, 1cm rounds","Miso paste","Sesame oil","Splash of soy sauce"],
-steps:["Mix miso, sesame oil, soy into a paste.","Brush both sides of aubergine rounds.","190°C, 10 mins.","Silky inside, caramelised outside."],tips:[]},
-
-{n:"Air Fryer Banana Chips",e:"🍌",cal:90,time:10,serves:2,cat:["snacks","air-fryer"],tags:["air-fryer","healthy","snack"],vibe:["healthy"],
-ing:["2 bananas, sliced 2-3mm","Squeeze of lemon juice","Pinch of cinnamon"],
-steps:["Slice bananas thin. Toss with lemon juice and cinnamon.","Single layer in air fryer.","150°C, 8-10 mins, flip halfway.","They crisp up more as they cool."],tips:["Perfect in overnight oats."]}
+{n:"Spinach & Feta Omelette",e:"\u{1F373}",cal:500,time:10,serves:1,cat:["breakfast"],tags:["quick","eggs"],vibe:["comfort"],ing:["3 eggs","Handful of spinach","30g feta, crumbled","4-5 cherry tomatoes, halved","1 slice sourdough","\u00BD avocado","Olive oil, salt, pepper"],steps:["Whisk eggs with salt and pepper.","Heat olive oil in a non-stick pan over medium heat.","Pour in eggs. As edges set, push inward, tilting pan to let uncooked egg flow to edges.","When mostly set but still slightly wet, scatter spinach and feta over one half.","Fold over, slide onto plate. Serve with sourdough toast, tomatoes, and avocado."],tips:[]},
+{n:"Overnight Oats",e:"\u{1F963}",cal:420,time:3,serves:1,cat:["breakfast"],tags:["quick","prep-ahead","no-cook"],vibe:["healthy"],ing:["50g porridge oats","150ml milk or water","2 tbsp Greek yoghurt","1 tbsp chia seeds","Handful of frozen berries","1 tbsp almond butter"],steps:["Night before: combine oats, milk, yoghurt, and chia seeds in a jar. Stir.","Top with frozen berries.","Morning: stir and top with almond butter."],tips:["Vary: banana + walnuts + honey, or mango + coconut."]},
+{n:"Scrambled Eggs, Mushrooms & Kale",e:"\u{1F344}",cal:400,time:10,serves:1,cat:["breakfast"],tags:["quick","eggs"],vibe:["comfort"],ing:["3 eggs","100g chestnut mushrooms, sliced","Handful of kale, torn","1 slice sourdough","Butter or olive oil"],steps:["Fry mushrooms 3-4 mins. Add kale 1-2 mins. Push aside.","Whisk eggs, pour in. Stir gently until just set.","Serve on sourdough."],tips:[]},
+{n:"Kitchen Sink Omelette",e:"\u{1F373}",cal:450,time:10,serves:1,cat:["breakfast"],tags:["quick","eggs","use-up-veg"],vibe:["comfort"],ing:["3 eggs","Mushrooms, peppers, any leftover veg","Grated cheddar"],steps:["Use whatever veg needs eating. Grate cheddar before folding."],tips:[]},
+{n:"Porridge with Banana & Blueberries",e:"\u{1F963}",cal:400,time:8,serves:1,cat:["breakfast"],tags:["quick"],vibe:["healthy"],ing:["50g porridge oats","250ml milk or water","1 banana, sliced","Handful of blueberries","Handful of walnuts","Drizzle of honey"],steps:["Cook oats and milk 5-6 mins. Top with banana, blueberries, walnuts, honey."],tips:[]},
+{n:"Halloumi Wrap",e:"\u{1F9C0}",cal:450,time:10,serves:1,cat:["lunch"],tags:["quick","halloumi"],vibe:["light"],ing:["80g halloumi, strips","1 wholemeal wrap","Handful of spinach","\u00BD pepper, sliced","2 tbsp hummus","Lemon squeeze"],steps:["Dry-fry halloumi 1-2 mins each side.","Warm wrap. Spread hummus, top with spinach, peppers, halloumi, lemon. Roll."],tips:[]},
+{n:"Quinoa, Chickpea & Avocado Bowl",e:"\u{1F957}",cal:500,time:10,serves:1,cat:["lunch"],tags:["quick","chickpeas","bowl"],vibe:["healthy"],ing:["80g cooked quinoa","\u00BD tin chickpeas","1 tsp smoked paprika","Handful of spinach","\u00BD avocado","1 tbsp tahini","Juice of \u00BD lemon"],steps:["Pan-fry chickpeas with paprika 5 mins.","Mix tahini, lemon, water for dressing.","Assemble: quinoa, spinach, chickpeas, avocado, tahini."],tips:[]},
+{n:"Black Bean Quesadillas",e:"\u{1FAD8}",cal:500,time:10,serves:1,cat:["lunch"],tags:["quick","black-beans"],vibe:["tex-mex"],ing:["2 wholemeal wraps","\u00BD tin black beans, mashed","Grated cheddar","\u00BD pepper, diced","Avocado to serve"],steps:["Wrap in dry pan. Spread beans, cheese, peppers. Top with second wrap.","Cook 3-4 mins each side. Slice into wedges."],tips:[]},
+{n:"Beetroot, Feta & Lentil Salad",e:"\u{1F96C}",cal:380,time:10,serves:1,cat:["lunch"],tags:["quick","lentils","no-cook"],vibe:["healthy"],ing:["2 raw beetroot, grated","\u00BD tin green lentils","50g feta","Pumpkin seeds","Spinach","Lemon juice, olive oil"],steps:["Toss beetroot, lentils, spinach. Dress with lemon and oil. Top with feta and seeds."],tips:[]},
+{n:"Red Lentil Dhal",e:"\u{1F372}",cal:480,time:25,serves:4,cat:["dinner","batch-cook"],tags:["one-pot","lentils","vegan"],vibe:["comfort","warming"],batch:true,ing:["250g red lentils","1 tin chopped tomatoes","1 onion","3 garlic cloves","Ginger","1 tsp turmeric","1 tsp cumin","1 tsp smoked paprika","Spinach","500ml stock","Brown rice"],steps:["Saut\u00E9 onion 3-4 mins. Add garlic, ginger, spices 1 min.","Add lentils, tomatoes, stock. Simmer 18-20 mins.","Stir through spinach. Serve over rice."],tips:["Make double \u2014 freezes brilliantly."]},
+{n:"Sweet Potato & Black Bean Bowls",e:"\u{1F32F}",cal:550,time:30,serves:2,cat:["dinner"],tags:["oven","sweet-potato"],vibe:["tex-mex"],ing:["2 sweet potatoes, diced","1 tin black beans","150g quinoa","1 tsp cumin","1 tsp smoked paprika","1 avocado","50g feta","Cherry tomatoes"],steps:["Roast sweet potato 200\u00B0C 25 mins.","Cook quinoa. Warm beans with cumin and paprika.","Assemble bowls."],tips:[]},
+{n:"Chickpea & Spinach Curry",e:"\u{1F35B}",cal:480,time:20,serves:4,cat:["dinner","batch-cook"],tags:["one-pot","chickpeas","vegan"],vibe:["comfort","warming"],batch:true,ing:["2 tins chickpeas","1 tin tomatoes","1 onion","3 garlic cloves","Ginger","1 tsp turmeric","1 tsp cumin","1 tsp garam masala","\u00BD tsp chilli flakes","Spinach","Brown rice"],steps:["Saut\u00E9 onion. Add garlic, ginger, spices.","Add tomatoes, chickpeas. Simmer 12-15 mins.","Stir through spinach. Serve over rice."],tips:["Make double. Freezes perfectly."]},
+{n:"Halloumi & Veg Traybake",e:"\u{1F9C0}",cal:500,time:25,serves:2,cat:["dinner"],tags:["oven","halloumi"],vibe:["comfort","friday-night"],ing:["200g halloumi","2 courgettes","2 peppers","1 red onion","Cherry tomatoes","Smoked paprika","Olive oil","Wraps or rice"],steps:["Spread veg on tray, oil, paprika. Roast 200\u00B0C 15 mins.","Add halloumi. 10 more mins. Serve."],tips:["Zero-effort Friday meal."]},
+{n:"Mushroom & Edamame Stir-Fry",e:"\u{1F962}",cal:420,time:15,serves:2,cat:["dinner"],tags:["quick","stir-fry"],vibe:["asian"],ing:["200g mushrooms","1 courgette","150g edamame","2 garlic cloves","Ginger","2 tbsp soy sauce","Sesame oil","Brown rice"],steps:["Stir-fry mushrooms and courgette 3-4 mins.","Add garlic, ginger, edamame 2 mins.","Soy and sesame oil. Serve over rice."],tips:[]},
+{n:"Roasted Veg & Lentil Soup",e:"\u{1F963}",cal:450,time:35,serves:4,cat:["dinner","batch-cook"],tags:["lentils","fridge-clear-out"],vibe:["comfort"],batch:true,ing:["Any leftover veg","100g red lentils","1 tin tomatoes","600ml stock","Garlic","Cumin","Sourdough"],steps:["Roast veg 200\u00B0C 20 mins. Simmer lentils in stock 15 mins.","Combine. Blend half. Serve with sourdough."],tips:["Sunday reset meal."]},
+{n:"Dal Makhani",e:"\u{1FAD8}",cal:380,time:45,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","lentils"],vibe:["comfort","warming"],batch:true,ing:["200g urad dal, soaked overnight","50g kidney beans, soaked overnight","1 tin tomatoes","2 onions","5 garlic cloves","Ginger","2 tbsp butter","Cumin seeds","Red chillies","Turmeric","Garam masala","Smoked paprika","Chilli powder","100ml cream","800ml water","Coriander"],steps:["Cumin seeds and chillies in butter. Onions 6-8 mins.","Garlic, ginger, spices. Tomatoes until oil separates.","Add dal, beans, water. Pressure cook 25 mins.","Mash some. Stir in butter and cream. Simmer 5 mins."],tips:["The king of dals."]},
+{n:"Chana Masala",e:"\u{1FAD8}",cal:340,time:35,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","chickpeas","vegan"],vibe:["comfort"],batch:true,ing:["300g dried chickpeas, soaked","1 tin tomatoes","2 onions","4 garlic cloves","Ginger","Green chillies","Cumin seeds","Bay leaves","Cinnamon","Turmeric","Coriander powder","Cumin powder","Garam masala","Amchur or lemon","500ml water"],steps:["Whole spices then onions golden. Garlic, ginger, ground spices.","Tomatoes thick. Add chickpeas, water. Pressure cook 18 mins.","Mash a few. Add garam masala. Simmer 5 mins."],tips:[]},
+{n:"Rajma Masala",e:"\u{1FAD8}",cal:360,time:40,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","kidney-beans"],vibe:["comfort"],batch:true,ing:["300g dried kidney beans, soaked overnight","1 tin tomatoes","2 onions","4 garlic cloves","Ginger","Cumin seeds","Bay leaves","Turmeric","Coriander powder","Cumin powder","Garam masala","Chilli powder","600ml water","Butter","Coriander"],steps:["Cumin, bay. Onions golden. Garlic, ginger, spices. Tomatoes.","Add beans, water. Pressure cook 20 mins.","Mash a quarter. Add butter and garam masala. Simmer 5 mins."],tips:[]},
+{n:"Sambar",e:"\u{1F958}",cal:280,time:25,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["indian","south-indian","vegan"],vibe:["healthy","warming"],batch:true,ing:["150g toor dal","Sweet potato","Carrot","Green beans","Aubergine","Onion","Tomatoes","Tamarind paste","Sambar powder","Turmeric","Coconut oil","Mustard seeds","Cumin seeds","Curry leaves","Dried chillies","Asafoetida"],steps:["Dal, veg, turmeric, water. Pressure cook 8 mins.","Add tamarind and sambar powder. Simmer 5 mins.","Tadka: oil, mustard seeds, cumin, curry leaves, chillies. Pour in."],tips:["Swap veg for whatever needs using."]},
+{n:"Mexican Black Bean Soup",e:"\u{1F963}",cal:310,time:35,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["mexican","vegan"],vibe:["comfort"],batch:true,ing:["300g dried black beans, soaked","1 tin tomatoes","2 onions","4 garlic cloves","Cumin","Smoked paprika","Coriander powder","Chipotle in adobo","800ml stock","2 limes","Avocado, yoghurt, coriander"],steps:["Onions, garlic, spices, chipotle.","Add beans, tomatoes, stock. Pressure cook 20 mins.","Blend half. Stir in lime juice."],tips:[]},
+{n:"Moroccan Tagine",e:"\u{1F372}",cal:370,time:30,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["moroccan","chickpeas"],vibe:["warming"],batch:true,ing:["300g dried chickpeas, soaked","2 sweet potatoes","1 tin tomatoes","2 onions","Garlic","Ginger","Harissa","Cumin","Coriander powder","Cinnamon","Turmeric","Dried apricots","400ml stock","Lemon","Coriander, almonds","Couscous"],steps:["Onions, garlic, ginger, harissa, spices.","Add chickpeas, sweet potato, apricots, stock. Pressure cook 15 mins.","Stir in lemon. Serve over couscous."],tips:[]},
+{n:"Ethiopian Misir Wot",e:"\u{1F372}",cal:320,time:30,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["ethiopian","lentils","vegan"],vibe:["warming","adventurous"],batch:true,ing:["250g red lentils","3 onions","4 garlic cloves","Ginger","Oil","Berbere spice","Tomato pur\u00E9e","Turmeric","600ml water"],steps:["Onions 10-12 mins deeply golden. Garlic, ginger, berbere, pur\u00E9e.","Add lentils, water. Pressure cook 8 mins. Season."],tips:["Berbere is the key."]},
+{n:"Tuscan White Bean Stew",e:"\u{1FAD8}",cal:350,time:35,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["italian","cannellini"],vibe:["comfort"],batch:true,ing:["300g dried cannellini, soaked","1 tin tomatoes","Cavolo nero or kale","2 onions","4 garlic cloves","Celery","Carrot","Olive oil","Rosemary","Parmesan rind","Smoked paprika","Chilli flakes","800ml stock"],steps:["Onions, celery, carrot. Garlic, rosemary, paprika.","Tomatoes. Add beans, stock, parmesan rind. Pressure cook 18 mins.","Remove rind. Add greens, simmer 5 mins. Mash a few beans."],tips:["Save parmesan rinds in the freezer."]},
+{n:"Vegetarian Chilli",e:"\u{1F336}\uFE0F",cal:380,time:40,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["mexican"],vibe:["comfort","crowd-pleaser"],batch:true,ing:["150g dried pinto beans, soaked","150g dried black beans, soaked","1 tin tomatoes","2 peppers","2 onions","4 garlic cloves","Cumin","Smoked paprika","Coriander powder","Oregano","Chipotle in adobo","Tomato pur\u00E9e","20g dark chocolate 70%+","500ml stock","Lime","Rice, avocado, yoghurt"],steps:["Onions, peppers. Garlic, spices. Chipotle, pur\u00E9e. Tomatoes.","Add beans, stock. Pressure cook 20 mins.","Stir in chocolate. Mash some. Add lime."],tips:["The dark chocolate is the secret weapon."]},
+{n:"Split Pea Soup",e:"\u{1F963}",cal:290,time:25,serves:7,cat:["dinner","batch-cook","pressure-cooker"],tags:["soup","vegan","cheap"],vibe:["comfort"],batch:true,ing:["300g green split peas","2 onions","3 garlic cloves","2 carrots","2 celery sticks","Olive oil","Smoked paprika","Cumin","Turmeric","1 litre stock","Lemon juice"],steps:["Onions, carrots, celery 5 mins. Garlic, spices 1 min.","Add peas, stock. Pressure cook 15 mins. Blend half. Add lemon."],tips:["Freezes flat in bags."]},
+{n:"Chips + Halloumi",e:"\u{1F35F}",cal:520,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","halloumi"],vibe:["friday-night"],ing:["4 potatoes, chunky chips, skin on","\u00BD tbsp olive oil","200g halloumi","Salad, sweet chilli"],steps:["Soak chips 20 mins. Dry. Oil and salt.","D1: chips 190\u00B0C 20 mins. D2 (at 12 mins): halloumi 200\u00B0C 8 mins."],tips:[]},
+{n:"Chips + Falafel",e:"\u{1F9C6}",cal:500,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","falafel"],vibe:["comfort"],ing:["4 potatoes, chips, skin on","Oil, salt","Falafel","Pitta, hummus, salad"],steps:["D1: chips 190\u00B0C 20 mins. D2 (at 8 mins): falafel 190\u00B0C 12 mins."],tips:[]},
+{n:"Chips + Portobello Burgers",e:"\u{1F354}",cal:420,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","mushroom"],vibe:["friday-night"],ing:["4 potatoes, chips","Oil, salt","4 portobello caps","Garlic, soy, paprika","Buns, avocado"],steps:["D1: chips 190\u00B0C 20 mins. D2 (at 10 mins): portobellos 190\u00B0C 10 mins."],tips:[]},
+{n:"Sweet Potato Chips + Bean Burgers",e:"\u{1F354}",cal:480,time:20,serves:2,cat:["dinner","air-fryer"],tags:["chips","sweet-potato"],vibe:["tex-mex"],ing:["2 sweet potatoes, chips","Oil, salt","1 tin black beans mashed","Oats, cumin, paprika, 1 egg"],steps:["D1: sweet potato chips 190\u00B0C 18 mins. D2 (at 6 mins): bean patties 190\u00B0C 12 mins."],tips:[]},
+{n:"Charred Broccoli",e:"\u{1F966}",cal:120,time:8,serves:2,cat:["sides","air-fryer"],tags:["quick","vegan"],vibe:["healthy"],ing:["1 broccoli, florets","Olive oil","Lemon juice","Parmesan"],steps:["Toss in oil. 190\u00B0C 8 mins. Lemon and parmesan."],tips:["Life-changing."]},
+{n:"Miso Aubergine",e:"\u{1F346}",cal:180,time:10,serves:2,cat:["sides","air-fryer"],tags:["japanese"],vibe:["asian"],ing:["2 aubergines, 1cm rounds","Miso paste","Sesame oil","Soy sauce"],steps:["Mix miso, sesame oil, soy. Brush both sides. 190\u00B0C 10 mins."],tips:[]},
+{n:"Air Fryer Banana Chips",e:"\u{1F34C}",cal:90,time:10,serves:2,cat:["snacks","air-fryer"],tags:["healthy"],vibe:["healthy"],ing:["2 bananas, 2-3mm slices","Lemon juice","Cinnamon"],steps:["Toss with lemon and cinnamon. 150\u00B0C 8-10 mins, flip halfway."],tips:["Perfect in overnight oats."]}
 ];
 
-const CATS=[
-{id:"all",label:"All",emoji:"📋"},
-{id:"breakfast",label:"Breakfast",emoji:"🍳"},
-{id:"lunch",label:"Lunch",emoji:"🥗"},
-{id:"dinner",label:"Dinner",emoji:"🍽️"},
-{id:"batch-cook",label:"Batch Cook",emoji:"🍲"},
-{id:"pressure-cooker",label:"Pressure Cooker",emoji:"♨️"},
-{id:"air-fryer",label:"Air Fryer",emoji:"🍟"},
-{id:"sides",label:"Sides",emoji:"🥦"},
-{id:"snacks",label:"Snacks",emoji:"🍌"},
-];
+const SNACKS=["Greek yoghurt + berries + seeds (~180 kcal)","Banana + almond butter (~220 kcal)","Mixed nuts (~170 kcal)","Apple + almond butter (~200 kcal)","Avocado on sourdough (~250 kcal)"];
+const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const CATS=[{id:"all",label:"All",em:"\u{1F4CB}"},{id:"breakfast",label:"Breakfast",em:"\u{1F373}"},{id:"lunch",label:"Lunch",em:"\u{1F957}"},{id:"dinner",label:"Dinner",em:"\u{1F37D}\uFE0F"},{id:"batch-cook",label:"Batch",em:"\u{1F372}"},{id:"pressure-cooker",label:"Pressure",em:"\u2668\uFE0F"},{id:"air-fryer",label:"Air Fryer",em:"\u{1F35F}"},{id:"sides",label:"Sides",em:"\u{1F966}"}];
 
-let activeCat="all",searchTerm="",openRecipe=null,servingsScale=1;
+let tab="recipes",activeCat="all",searchTerm="",openRecipe=null,prevTab="recipes",servingsScale=1,mealPlan=null,checkedItems={};
 
-function matches(r){
-  if(activeCat!=="all"&&!r.cat.includes(activeCat))return false;
-  if(!searchTerm)return true;
-  const s=searchTerm.toLowerCase();
-  if(r.n.toLowerCase().includes(s))return true;
-  if(r.tags.some(t=>t.includes(s)))return true;
-  if(r.vibe.some(v=>v.includes(s)))return true;
-  if(r.ing.some(i=>i.toLowerCase().includes(s)))return true;
-  return false;
-}
+function savePlan(){try{localStorage.setItem("or_plan",JSON.stringify(mealPlan));localStorage.setItem("or_checked",JSON.stringify(checkedItems))}catch(e){}}
+function loadPlan(){try{const p=localStorage.getItem("or_plan");if(p)mealPlan=JSON.parse(p);const c=localStorage.getItem("or_checked");if(c)checkedItems=JSON.parse(c)}catch(e){}}
+loadPlan();
 
-function scaleAmount(text,scale){
-  if(scale===1)return text;
-  return text.replace(/(\d+\.?\d*)/g,(m)=>{
-    const n=parseFloat(m)*scale;
-    return n%1===0?n.toString():n.toFixed(1);
-  });
-}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function pickExcluding(arr,exclude){let r;let a=0;do{r=pick(arr);a++}while(a<30&&exclude.includes(r.n));return r}
+function matches(r){if(activeCat!=="all"&&!r.cat.includes(activeCat))return false;if(!searchTerm)return true;const s=searchTerm.toLowerCase();return r.n.toLowerCase().includes(s)||r.tags.some(t=>t.includes(s))||r.vibe.some(v=>v.includes(s))||r.ing.some(i=>i.toLowerCase().includes(s))}
+function scaleAmount(t,s){if(s===1)return t;return t.replace(/(\d+\.?\d*)/g,m=>{const n=parseFloat(m)*s;return n%1===0?n.toString():n.toFixed(1)})}
 
-function renderList(){
-  const filtered=R.filter(matches);
-  let h=`<div class="app-header"><div class="app-title">Ollie's Recipes</div><div class="app-sub">${R.length} recipes</div></div>`;
-  h+=`<div class="search-bar"><input class="search-input" type="text" placeholder="Search by name, ingredient, or vibe..." value="${searchTerm}" oninput="searchTerm=this.value;render()"></div>`;
-  h+=`<div class="tags-row">`;
-  CATS.forEach(c=>{
-    h+=`<button class="tag ${activeCat===c.id?'active':''}" onclick="activeCat='${c.id}';render()">${c.emoji} ${c.label}</button>`;
-  });
-  h+=`</div>`;
-  h+=`<div class="count-badge">${filtered.length} recipe${filtered.length!==1?'s':''}</div>`;
-  h+=`<div class="recipe-list">`;
-  if(filtered.length===0){
-    h+=`<div class="empty-state"><div class="emoji">🔍</div><p>Nothing found. Try a different search or category.</p></div>`;
+function generatePlan(){
+  const bfs=R.filter(r=>r.cat.includes("breakfast"));
+  const lns=R.filter(r=>r.cat.includes("lunch"));
+  const dns=R.filter(r=>r.cat.includes("dinner"));
+  const plan=[];let leftover=null;const usedDinners=[];
+  for(let d=0;d<7;d++){
+    const bf=pickExcluding(bfs,d>0?[plan[d-1].breakfast.n]:[]);
+    let lunch;
+    if(leftover){lunch={n:"Leftover "+leftover.n,e:"\u267B\uFE0F",cal:leftover.cal,time:5,serves:1,cat:[],tags:[],vibe:[],ing:["Leftovers from "+leftover.n],steps:["Reheat and serve."],tips:[],leftover:true};leftover=null}
+    else{lunch=pickExcluding(lns,d>0&&plan[d-1].lunch&&!plan[d-1].lunch.leftover?[plan[d-1].lunch.n]:[])}
+    const dinner=pickExcluding(dns,usedDinners.slice(-2));
+    usedDinners.push(dinner.n);
+    if(dinner.batch&&d<6)leftover=dinner;
+    plan.push({day:DAYS[d],breakfast:bf,lunch:lunch,dinner:dinner,snack:pick(SNACKS)});
   }
-  filtered.forEach((r,i)=>{
-    const idx=R.indexOf(r);
-    h+=`<div class="recipe-card" onclick="openRecipe=${idx};servingsScale=1;render()">
-      <div class="card-header">
-        <span class="card-emoji">${r.e}</span>
-        <div class="card-info">
-          <div class="card-title">${r.n}</div>
-          <div class="card-meta"><span>⏱ ${r.time} min</span><span>👥 ${r.serves}</span></div>
-          <div class="card-tags">${r.cat.map(c=>`<span class="card-tag">${c}</span>`).join("")}${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}</div>
-        </div>
-        <div class="card-cals">~${r.cal}</div>
-      </div>
-    </div>`;
+  mealPlan=plan;checkedItems={};savePlan();render();
+}
+
+function swapMeal(di,mt){
+  if(!mealPlan)return;
+  const pool=mt==="breakfast"?R.filter(r=>r.cat.includes("breakfast")):mt==="lunch"?R.filter(r=>r.cat.includes("lunch")):R.filter(r=>r.cat.includes("dinner"));
+  const curr=mealPlan[di][mt];
+  let next;let a=0;do{next=pick(pool);a++}while(a<20&&next.n===curr.n);
+  mealPlan[di][mt]=next;
+  if(mt==="dinner"&&next.batch&&di<6){
+    mealPlan[di+1].lunch={n:"Leftover "+next.n,e:"\u267B\uFE0F",cal:next.cal,time:5,serves:1,cat:[],tags:[],vibe:[],ing:["Leftovers from "+next.n],steps:["Reheat and serve."],tips:[],leftover:true};
+  }
+  savePlan();render();
+}
+
+function parseIng(raw){
+  // Strip prep instructions
+  let s=raw.replace(/,?\s*(diced|minced|sliced|grated|chopped|torn|halved|cubed|crushed|broken|roughly|finely|thinly|peeled|rinsed|drained|thawed|soaked overnight|soaked|to serve|to finish|whole|fresh|frozen|dried|raw|skin on|slit|cut into.*|half-moons?)/gi,"").trim();
+  s=s.replace(/\s+/g," ").replace(/,\s*$/,"").trim();
+  // Extract leading quantity: "2 tbsp" or "½" or "100g" or "3-4"
+  const m=s.match(/^([\d½¼¾⅓⅔]+(?:[.-][\d½¼¾]+)?)\s*(g|kg|ml|l|tbsp|tsp|tin|tins|cloves?|sticks?|sprigs?|slices?|heads?|handfuls?|bunch|thumbs?|drizzle|squeeze|splash|pinch)?\s*(.+)$/i);
+  if(m){
+    let qty=m[1].replace("½",".5").replace("¼",".25").replace("¾",".75").replace("⅓",".33").replace("⅔",".67");
+    if(qty.includes("-")){const parts=qty.split("-");qty=String((parseFloat(parts[0])+parseFloat(parts[1]))/2)}
+    return{qty:parseFloat(qty)||1,unit:(m[2]||"").toLowerCase().replace(/s$/,""),name:m[3].trim().toLowerCase()};
+  }
+  // No quantity found - check for "Handful of X" etc
+  const m2=s.match(/^(handful|big handful|squeeze|splash|drizzle|thumb|pinch)\s+(?:of\s+)?(.+)$/i);
+  if(m2)return{qty:1,unit:m2[1].toLowerCase(),name:m2[2].trim().toLowerCase()};
+  return{qty:1,unit:"",name:s.toLowerCase()};
+}
+
+function normName(n){
+  return n.replace(/ies$/,"y").replace(/oes$/,"o").replace(/ves$/,"f").replace(/(?<!s)s$/,"")
+    .replace(/\s*\(.*?\)\s*/g,"").replace(/\bor\b.*/,"").trim();
+}
+
+function fmtQty(q){if(q%1===0)return String(q);if(Math.abs(q-0.5)<0.01)return"½";if(Math.abs(q-0.25)<0.01)return"¼";if(Math.abs(q-0.75)<0.01)return"¾";return q.toFixed(1)}
+
+function buildShoppingList(){
+  if(!mealPlan)return[];
+  const allRaw=[];
+  mealPlan.forEach(day=>{[day.breakfast,day.lunch,day.dinner].forEach(m=>{if(m&&m.ing&&!m.leftover)m.ing.forEach(i=>allRaw.push(i))})});
+  // Parse and group
+  const groups={};
+  allRaw.forEach(raw=>{
+    const p=parseIng(raw);
+    const key=normName(p.name);
+    if(!key||key==="salt"||key==="pepper"||key==="oil, salt, pepper")return; // skip generic seasonings
+    if(!groups[key])groups[key]={qty:0,unit:p.unit,name:p.name,raw:raw};
+    groups[key].qty+=p.qty;
+    // keep longest raw name for display
+    if(raw.length>groups[key].raw.length)groups[key].raw=raw;
   });
-  h+=`</div>`;
-  h+=`<button class="random-btn" onclick="openRecipe=Math.floor(Math.random()*R.length);servingsScale=1;render()" title="Random recipe">🎲</button>`;
+  // Format consolidated items
+  const items=Object.values(groups).map(g=>{
+    const display=g.unit?`${fmtQty(g.qty)} ${g.unit}${g.qty>1&&!g.unit.match(/^(g|kg|ml|l|tbsp|tsp)$/)?"s":""} ${g.name}`:`${g.qty>1?fmtQty(g.qty)+" × ":""}${g.name}`;
+    return{display:display.charAt(0).toUpperCase()+display.slice(1),name:g.name};
+  });
+  // Categorise
+  const cats={"Vegetables & Herbs":[],"Pulses & Grains":[],"Dairy & Eggs":[],"Tins & Jars":[],"Spices & Seasoning":[],"Staples":[],"Other":[]};
+  const vegW=["onion","garlic","ginger","spinach","kale","tomato","pepper","courgette","sweet potato","potato","aubergine","carrot","celery","avocado","mushroom","broccoli","beetroot","cauliflower","coriander","lemon","lime","banana","blueberr","walnut","almond","green bean","apricot","pumpkin seed"];
+  const pulseW=["lentil","chickpea","bean","quinoa","rice","oat","pea","split pea","dal","urad","toor","couscous"];
+  const dairyW=["egg","feta","halloumi","cheddar","cheese","yoghurt","cream","butter","milk","parmesan"];
+  const tinW=["tin ","tinned","stock","purée","puree","tamarind","harissa","chipotle","adobo","hummus","soy sauce","tahini","sesame oil","coconut oil"];
+  const spiceW=["cumin","turmeric","paprika","garam","cinnamon","chilli","berbere","sambar","coriander powder","mustard seed","curry leave","asafoetida","oregano","rosemary","bay leave","chocolate"];
+  const stapleW=["sourdough","wrap","pitta","bread","bun","olive oil","oil","honey","noodle"];
+  items.forEach(it=>{
+    const n=it.name;
+    if(spiceW.some(w=>n.includes(w)))cats["Spices & Seasoning"].push(it.display);
+    else if(dairyW.some(w=>n.includes(w)))cats["Dairy & Eggs"].push(it.display);
+    else if(tinW.some(w=>n.includes(w)))cats["Tins & Jars"].push(it.display);
+    else if(pulseW.some(w=>n.includes(w)))cats["Pulses & Grains"].push(it.display);
+    else if(vegW.some(w=>n.includes(w)))cats["Vegetables & Herbs"].push(it.display);
+    else if(stapleW.some(w=>n.includes(w)))cats["Staples"].push(it.display);
+    else cats["Other"].push(it.display);
+  });
+  return Object.entries(cats).filter(([,v])=>v.length>0);
+}
+
+function toggleCheck(k){checkedItems[k]=!checkedItems[k];savePlan();render()}
+
+function renderRecipes(){
+  const f=R.filter(matches);
+  let h=`<div class="app-header"><div class="app-title">Ollie's Recipes</div><div class="app-sub">${R.length} recipes</div></div>`;
+  h+=`<div class="search-bar"><input class="search-input" type="text" placeholder="Search name, ingredient, or vibe..." value="${searchTerm}" oninput="searchTerm=this.value;render()"></div>`;
+  h+=`<div class="tags-row">${CATS.map(c=>`<button class="tag ${activeCat===c.id?'active':''}" onclick="activeCat='${c.id}';render()">${c.em} ${c.label}</button>`).join("")}</div>`;
+  h+=`<div class="count-badge">${f.length} recipe${f.length!==1?'s':''}</div><div class="recipe-list">`;
+  if(!f.length)h+=`<div class="empty-state"><div class="emoji">\u{1F50D}</div><p>Nothing found.</p></div>`;
+  f.forEach(r=>{const i=R.indexOf(r);h+=`<div class="recipe-card" onclick="prevTab='recipes';openRecipe=${i};servingsScale=1;render()"><div class="card-header"><span class="card-emoji">${r.e}</span><div class="card-info"><div class="card-title">${r.n}</div><div class="card-meta"><span>\u23F1 ${r.time}m</span><span>\u{1F465} ${r.serves}</span></div><div class="card-tags">${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.batch?'<span class="card-tag" style="background:#FEF3C7;color:#A16207">batch</span>':''}</div></div><div class="card-cals">~${r.cal}</div></div></div>`});
+  h+=`</div><button class="random-btn" onclick="prevTab='recipes';openRecipe=Math.floor(Math.random()*R.length);servingsScale=1;render()">\u{1F3B2}</button>`;
   return h;
 }
 
 function renderDetail(){
-  const r=R[openRecipe];
-  const s=servingsScale;
-  const baseServes=r.serves;
-  const scaledServes=Math.round(baseServes*s);
-  let h=`<div class="app-header"><div class="app-title">${r.e} ${r.n}</div><div class="app-sub">~${Math.round(r.cal*s/baseServes*baseServes)} kcal per serving</div></div>`;
-  h+=`<div class="recipe-detail open">`;
-  h+=`<button class="back-btn" onclick="openRecipe=null;render()">← Back</button>`;
-  h+=`<div class="detail-meta"><span>⏱ ${r.time} mins</span><span>~${r.cal} kcal</span></div>`;
-  h+=`<div class="card-tags" style="margin-bottom:8px">${r.cat.map(c=>`<span class="card-tag">${c}</span>`).join("")}${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.tags.map(t=>`<span class="card-tag">${t}</span>`).join("")}</div>`;
+  const r=R[openRecipe],s=servingsScale;
+  let h=`<div class="app-header"><div class="app-title">${r.e} ${r.n}</div><div class="app-sub">~${r.cal} kcal \u00B7 ${r.time} mins</div></div>`;
+  h+=`<button class="back-btn" onclick="openRecipe=null;tab=prevTab;render()">\u2190 Back</button><div class="detail-wrap">`;
+  h+=`<div class="card-tags" style="margin-bottom:12px">${r.cat.map(c=>`<span class="card-tag">${c}</span>`).join("")}${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.tags.map(t=>`<span class="card-tag">${t}</span>`).join("")}</div>`;
+  if(r.serves){const sc=Math.round(r.serves*s);h+=`<div class="servings-ctrl"><span>Servings</span><button class="serv-btn" onclick="if(servingsScale>0.5){servingsScale=Math.round((servingsScale-0.5)*10)/10;render()}">\u2212</button><span class="serv-num">${sc}</span><button class="serv-btn" onclick="servingsScale=Math.round((servingsScale+0.5)*10)/10;render()">+</button></div>`}
+  h+=`<div class="detail-section">Ingredients</div>`;r.ing.forEach(i=>{h+=`<div class="ingredient">${scaleAmount(i,s)}</div>`});
+  h+=`<div class="detail-section">Method</div>`;r.steps.forEach((st,i)=>{h+=`<div class="step"><span class="step-num">${i+1}</span><span>${st}</span></div>`});
+  if(r.tips&&r.tips.length)r.tips.forEach(t=>{h+=`<div class="tip-box">\u{1F4A1} ${t}</div>`});
+  h+=`</div>`;return h;
+}
 
-  h+=`<div class="servings-ctrl"><span>Servings</span><button class="serv-btn" onclick="if(servingsScale>0.5){servingsScale=Math.round((servingsScale-0.5)*10)/10;render()}">−</button><span class="serv-num">${scaledServes}</span><button class="serv-btn" onclick="servingsScale=Math.round((servingsScale+0.5)*10)/10;render()">+</button></div>`;
+function findRecipeIdx(name){const clean=name.replace(/^Leftover /,"");return R.findIndex(r=>r.n===clean)}
 
-  h+=`<div class="detail-section">Ingredients</div>`;
-  r.ing.forEach(i=>{
-    h+=`<div class="ingredient">${scaleAmount(i,s)}</div>`;
-  });
-
-  h+=`<div class="detail-section">Method</div>`;
-  r.steps.forEach((st,i)=>{
-    h+=`<div class="step"><span class="step-num">${i+1}</span><span>${st}</span></div>`;
-  });
-
-  if(r.tips.length){
-    r.tips.forEach(t=>{
-      h+=`<div class="tip-box">💡 ${t}</div>`;
+function renderPlan(){
+  let h=`<div class="app-header"><div class="app-title">\u{1F4C5} Meal Plan</div><div class="app-sub">${mealPlan?'Tap \u{1F504} to swap any meal':'Generate a weekly plan'}</div>`;
+  h+=`<button class="header-btn" onclick="generatePlan()">\u{1F3B2} ${mealPlan?'New Plan':'Generate Plan'}</button></div>`;
+  if(!mealPlan)return h+`<div class="empty-state"><div class="emoji">\u{1F4C5}</div><p>Tap Generate Plan for a randomised week with smart leftover management.</p></div>`;
+  h+=`<div class="plan-section">`;
+  let weekCals=0;
+  mealPlan.forEach((day,di)=>{
+    const dc=day.breakfast.cal+day.lunch.cal+day.dinner.cal;weekCals+=dc;
+    h+=`<div class="day-card"><div class="day-header"><span>${day.day}</span><span class="day-cals">~${dc} kcal</span></div>`;
+    ["breakfast","lunch","dinner"].forEach(mt=>{
+      const m=day[mt];
+      h+=`<div class="meal-slot" onclick="var idx=findRecipeIdx('${m.n.replace(/'/g,"\\'")}');if(idx>=0){prevTab='plan';openRecipe=idx;servingsScale=1;render()}" style="cursor:pointer"><span class="meal-type">${mt}</span><span style="font-size:18px">${m.e}</span><div style="flex:1"><div class="meal-name">${m.n}</div>${m.leftover?'<div class="meal-leftover">\u267B\uFE0F from last night</div>':''}<div class="meal-sub">\u23F1 ${m.time}m</div></div><span class="meal-cal">~${m.cal}</span>${!m.leftover?`<button class="swap-btn" onclick="event.stopPropagation();swapMeal(${di},'${mt}')">\u{1F504}</button>`:''}</div>`;
     });
-  }
-  h+=`</div>`;
-  return h;
+    h+=`<div class="snack-row">\u{1F36A} Snack: ${day.snack}</div></div>`;
+  });
+  h+=`<div class="count-badge" style="font-weight:700;color:var(--teal)">Week average: ~${Math.round(weekCals/7)} kcal/day (meals only)</div>`;
+  h+=`</div>`;return h;
+}
+
+function renderShop(){
+  let h=`<div class="app-header"><div class="app-title">\u{1F6D2} Shopping List</div><div class="app-sub">${mealPlan?'From your meal plan':'Generate a plan first'}</div></div>`;
+  if(!mealPlan)return h+`<div class="empty-state"><div class="emoji">\u{1F6D2}</div><p>Generate a meal plan first.</p></div>`;
+  const categories=buildShoppingList();
+  const total=categories.reduce((a,[,v])=>a+v.length,0);
+  const done=Object.values(checkedItems).filter(Boolean).length;
+  h+=`<div class="count-badge" style="font-size:15px;font-weight:700;color:${done===total?'var(--green)':'var(--dark)'}">${done}/${total} items \u2714</div>`;
+  h+=`<div class="shop-section">`;
+  categories.forEach(([cat,items])=>{
+    h+=`<div class="shop-cat-header">${cat}</div>`;
+    items.forEach((item,i)=>{const k=cat+i;const d=checkedItems[k];h+=`<div class="shop-item" onclick="toggleCheck('${k}')"><span class="shop-check ${d?'done':''}">\u2713</span><span class="shop-text ${d?'done':''}">${item}</span></div>`});
+  });
+  h+=`</div>`;return h;
 }
 
 function render(){
-  document.getElementById("app").innerHTML=openRecipe!==null?renderDetail():renderList();
-  if(openRecipe===null){
-    const inp=document.querySelector('.search-input');
-    if(inp&&searchTerm){inp.focus();inp.setSelectionRange(searchTerm.length,searchTerm.length)}
-  }
+  let h=`<div class="app-wrap">`;
+  if(openRecipe!==null)h+=renderDetail();
+  else if(tab==="recipes")h+=renderRecipes();
+  else if(tab==="plan")h+=renderPlan();
+  else if(tab==="shop")h+=renderShop();
+  h+=`</div><div class="tab-bar">`;
+  h+=`<button class="tab ${tab==='recipes'&&openRecipe===null?'active':''}" onclick="tab='recipes';openRecipe=null;render()"><div class="tab-icon">\u{1F4CB}</div><span>Recipes</span></button>`;
+  h+=`<button class="tab ${tab==='plan'?'active':''}" onclick="tab='plan';openRecipe=null;render()"><div class="tab-icon">\u{1F4C5}</div><span>Plan</span></button>`;
+  h+=`<button class="tab ${tab==='shop'?'active':''}" onclick="tab='shop';openRecipe=null;render()"><div class="tab-icon">\u{1F6D2}</div><span>Shop</span></button>`;
+  h+=`</div>`;
+  document.getElementById("app").innerHTML=h;
 }
-
 render();
 </script>
 </body>
