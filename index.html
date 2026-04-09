@@ -122,7 +122,60 @@ let tab="recipes",activeCat="all",searchTerm="",openRecipe=null,prevTab="recipes
 
 function savePlan(){try{localStorage.setItem("or_plan",JSON.stringify(mealPlan));localStorage.setItem("or_checked",JSON.stringify(checkedItems))}catch(e){}}
 function loadPlan(){try{const p=localStorage.getItem("or_plan");if(p)mealPlan=JSON.parse(p);const c=localStorage.getItem("or_checked");if(c)checkedItems=JSON.parse(c)}catch(e){}}
-loadPlan();
+
+// Encode plan as compact URL hash
+function encodePlan(){
+  if(!mealPlan)return"";
+  return mealPlan.map(day=>{
+    const bi=R.findIndex(r=>r.n===day.breakfast.n);
+    const li=day.lunch.leftover?-1:R.findIndex(r=>r.n===day.lunch.n);
+    const di=R.findIndex(r=>r.n===day.dinner.n);
+    const si=SNACKS.indexOf(day.snack);
+    return[bi,li,di,si].join(",");
+  }).join("|");
+}
+
+// Decode plan from URL hash
+function decodePlan(hash){
+  try{
+    const days=hash.split("|");
+    if(days.length!==7)return null;
+    const plan=[];
+    for(let d=0;d<7;d++){
+      const[bi,li,di,si]=days[d].split(",").map(Number);
+      const bf=R[bi]||R[0];
+      const dinner=R[di]||R[9];
+      let lunch;
+      if(li===-1&&d>0){
+        const prevDinner=plan[d-1].dinner;
+        lunch={n:"Leftover "+prevDinner.n,e:"\u267B\uFE0F",cal:prevDinner.cal,time:5,serves:1,cat:[],tags:[],vibe:[],ing:["Leftovers from "+prevDinner.n],steps:["Reheat and serve."],tips:[],leftover:true};
+      }else{lunch=R[li]||R[5]}
+      plan.push({day:DAYS[d],breakfast:bf,lunch:lunch,dinner:dinner,snack:SNACKS[si]||SNACKS[0]});
+    }
+    return plan;
+  }catch(e){return null}
+}
+
+function sharePlan(){
+  const code=encodePlan();
+  const url=window.location.origin+window.location.pathname+"#plan="+code;
+  if(navigator.share){
+    navigator.share({title:"This week's meal plan",text:"Here's our meal plan for the week!",url:url}).catch(()=>{});
+  }else{
+    navigator.clipboard.writeText(url).then(()=>{alert("Link copied to clipboard!")}).catch(()=>{prompt("Copy this link:",url)});
+  }
+}
+
+// Load: check URL hash first, then localStorage
+(function(){
+  const hash=window.location.hash;
+  if(hash.startsWith("#plan=")){
+    const code=hash.slice(6);
+    const decoded=decodePlan(code);
+    if(decoded){mealPlan=decoded;checkedItems={};tab="plan";savePlan();window.location.hash="";return}
+  }
+  loadPlan();
+})();
 
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function pickExcluding(arr,exclude){let r;let a=0;do{r=pick(arr);a++}while(a<30&&exclude.includes(r.n));return r}
@@ -254,7 +307,7 @@ function findRecipeIdx(name){const clean=name.replace(/^Leftover /,"");return R.
 
 function renderPlan(){
   let h=`<div class="app-header"><div class="app-title">\u{1F4C5} Meal Plan</div><div class="app-sub">${mealPlan?'Tap \u{1F504} to swap any meal':'Generate a weekly plan'}</div>`;
-  h+=`<button class="header-btn" onclick="generatePlan()">\u{1F3B2} ${mealPlan?'New Plan':'Generate Plan'}</button></div>`;
+  h+=`<div style="display:flex;gap:8px;margin-top:10px"><button class="header-btn" onclick="generatePlan()">\u{1F3B2} ${mealPlan?'New Plan':'Generate Plan'}</button>${mealPlan?'<button class="header-btn" onclick="sharePlan()">\u{1F4E4} Share Plan</button>':''}</div></div>`;
   if(!mealPlan)return h+`<div class="empty-state"><div class="emoji">\u{1F4C5}</div><p>Tap Generate Plan for a randomised week with smart leftover management.</p></div>`;
   h+=`<div class="plan-section">`;
   let weekCals=0;
