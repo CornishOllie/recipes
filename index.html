@@ -77,6 +77,28 @@ input{font-family:inherit;-webkit-appearance:none}
 .count-badge{text-align:center;padding:8px;font-size:13px;color:var(--muted)}
 .random-btn{position:fixed;bottom:90px;right:20px;background:var(--teal);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(0,168,150,.4);z-index:80}
 .snack-row{padding:10px 16px;background:#FEFCE8;font-size:13px;color:#A16207;font-weight:500;border-top:1px solid var(--border)}
+.start-cook-btn{display:block;width:100%;padding:16px;border-radius:12px;background:var(--teal);color:#fff;font-size:16px;font-weight:700;margin:16px 0;box-shadow:0 4px 12px rgba(0,168,150,.25)}
+.cook-overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column}
+.cook-header{background:var(--teal);color:#fff;padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top));display:flex;align-items:center;gap:12px}
+.cook-progress{flex:1;font-size:14px;font-weight:600;line-height:1.3}
+.cook-close{background:rgba(255,255,255,.2);width:36px;height:36px;border-radius:50%;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cook-bar{height:4px;background:rgba(255,255,255,.3);width:100%}
+.cook-bar-fill{height:100%;background:#fff;transition:width .25s}
+.cook-body{flex:1;padding:32px 24px;overflow-y:auto;display:flex;flex-direction:column;justify-content:center}
+.cook-step-num{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:14px}
+.cook-step-text{font-size:22px;line-height:1.45;color:var(--dark)}
+.cook-nav{display:flex;gap:12px;padding:16px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--card)}
+.cook-nav-btn{flex:1;padding:14px;border-radius:12px;font-size:16px;font-weight:700;background:var(--teal);color:#fff;border:none}
+.cook-nav-btn.secondary{background:#F1F5F9;color:var(--dark)}
+.cook-nav-btn:disabled{opacity:.4}
+.timer-chip{display:inline-flex;align-items:center;gap:6px;background:var(--teal-light);color:#0D7466;border-radius:8px;padding:4px 10px;font-size:14px;font-weight:600;margin:0 2px;cursor:pointer;border:1px solid #B5EFE5;vertical-align:baseline}
+.timer-chip.running{background:#FEF3C7;color:#A16207;border-color:#F59E0B}
+.timer-chip.done{background:#FEE2E2;color:#991B1B;border-color:#EF4444;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.timer-bar{position:fixed;left:0;right:0;background:#A16207;color:#fff;padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom));font-size:14px;display:flex;gap:8px;flex-wrap:wrap;z-index:1100;bottom:0}
+.timer-bar.has-tabs{bottom:60px}
+.timer-bar .timer-chip{background:rgba(255,255,255,.25);color:#fff;border-color:rgba(255,255,255,.4)}
+.timer-bar .timer-chip.done{background:#FEE2E2;color:#991B1B;border-color:#EF4444}
 </style>
 </head>
 <body>
@@ -123,6 +145,7 @@ const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunda
 const CATS=[{id:"all",label:"All",em:"\u{1F4CB}"},{id:"breakfast",label:"Breakfast",em:"\u{1F373}"},{id:"lunch",label:"Lunch",em:"\u{1F957}"},{id:"dinner",label:"Dinner",em:"\u{1F37D}\uFE0F"},{id:"batch-cook",label:"Batch",em:"\u{1F372}"},{id:"pressure-cooker",label:"Pressure",em:"\u2668\uFE0F"},{id:"air-fryer",label:"Air Fryer",em:"\u{1F35F}"},{id:"sides",label:"Sides",em:"\u{1F966}"}];
 
 let tab="recipes",activeCat="all",searchTerm="",openRecipe=null,prevTab="recipes",servingsScale=1,mealPlan=null,checkedItems={};
+let cookMode=false,cookStep=0,wakeLockSentinel=null,activeTimers=[],timerTickerId=null,audioCtx=null;
 
 function savePlan(){try{localStorage.setItem("or_plan",JSON.stringify(mealPlan));localStorage.setItem("or_checked",JSON.stringify(checkedItems))}catch(e){}}
 function loadPlan(){try{const p=localStorage.getItem("or_plan");if(p)mealPlan=JSON.parse(p);const c=localStorage.getItem("or_checked");if(c)checkedItems=JSON.parse(c)}catch(e){}}
@@ -193,6 +216,114 @@ function sharePlan(){
   }
   loadPlan();
 })();
+
+// --- Cook Mode ---
+async function enterCookMode(){
+  cookMode=true;cookStep=0;
+  if("wakeLock" in navigator){
+    try{wakeLockSentinel=await navigator.wakeLock.request("screen")}catch(e){}
+  }
+  render();
+}
+async function exitCookMode(){
+  cookMode=false;
+  if(wakeLockSentinel){try{await wakeLockSentinel.release()}catch(e){}wakeLockSentinel=null}
+  render();
+}
+function nextStep(){const r=R[openRecipe];if(cookStep<r.steps.length-1){cookStep++;render()}else{exitCookMode()}}
+function prevStep(){if(cookStep>0){cookStep--;render()}}
+
+// Browsers release wake lock when tab hidden — re-acquire on return.
+document.addEventListener("visibilitychange",async()=>{
+  if(cookMode&&!document.hidden&&"wakeLock" in navigator&&!wakeLockSentinel){
+    try{wakeLockSentinel=await navigator.wakeLock.request("screen")}catch(e){}
+  }
+});
+
+// --- Timers (tappable countdowns parsed from step text) ---
+function ensureAudio(){if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return audioCtx}
+function beep(){
+  const ctx=ensureAudio();if(!ctx)return;
+  if(ctx.state==="suspended")ctx.resume().catch(()=>{});
+  try{
+    const osc=ctx.createOscillator();const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.frequency.value=880;
+    gain.gain.setValueAtTime(.3,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+1);
+    osc.start();osc.stop(ctx.currentTime+1);
+  }catch(e){}
+}
+function startTimer(secs,label){
+  ensureAudio(); // initialise on user gesture so iOS lets us beep later
+  const id=Date.now()+Math.floor(Math.random()*1000);
+  activeTimers.push({id:id,label:label,totalSecs:secs,endsAt:Date.now()+secs*1000,done:false});
+  if(!timerTickerId)timerTickerId=setInterval(tickTimers,500);
+  render();
+}
+function tickTimers(){
+  const now=Date.now();let needRender=false;
+  activeTimers.forEach(t=>{
+    if(!t.done&&now>=t.endsAt){
+      t.done=true;needRender=true;
+      if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);
+      beep();
+    }
+  });
+  // re-render every tick so countdown updates visibly
+  render();
+}
+function dismissTimer(id){
+  activeTimers=activeTimers.filter(t=>t.id!==id);
+  if(activeTimers.length===0&&timerTickerId){clearInterval(timerTickerId);timerTickerId=null}
+  render();
+}
+function fmtTimerSecs(s){if(s<=0)return"0:00";const m=Math.floor(s/60);const sec=s%60;return m+":"+String(sec).padStart(2,"0")}
+
+// Parse step text and replace "X mins / X-Y mins / X secs" with tap-to-start chips.
+function annotateStep(text){
+  return text.replace(/(\d+)(?:\s*[\-–]\s*(\d+))?\s*(mins?|minutes?|secs?|seconds?)\b/gi,(m,a,b,unit)=>{
+    let n=parseInt(a);
+    if(b)n=Math.round((parseInt(a)+parseInt(b))/2);
+    const isSec=/^sec/i.test(unit);
+    const totalSecs=isSec?n:n*60;
+    const safeLabel=m.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+    return `<button class="timer-chip" onclick="event.stopPropagation();startTimer(${totalSecs},'${safeLabel}')">⏱ ${m}</button>`;
+  });
+}
+
+function renderTimerBar(){
+  if(!activeTimers.length)return"";
+  // .has-tabs lifts above the bottom tab bar when not in cook mode
+  const cls=cookMode?"timer-bar":"timer-bar has-tabs";
+  return `<div class="${cls}">${activeTimers.map(t=>{
+    const remaining=Math.max(0,Math.ceil((t.endsAt-Date.now())/1000));
+    return `<span class="timer-chip ${t.done?"done":"running"}" onclick="dismissTimer(${t.id})">⏱ ${t.done?"Done!":fmtTimerSecs(remaining)} · ${t.label} ✕</span>`;
+  }).join("")}</div>`;
+}
+
+function renderCookMode(){
+  const r=R[openRecipe];
+  const total=r.steps.length;
+  const stepText=annotateStep(r.steps[cookStep]);
+  const pct=Math.round(((cookStep+1)/total)*100);
+  let h=`<div class="cook-overlay">
+    <div class="cook-header">
+      <div class="cook-progress">${r.e} ${r.n}<br><span style="font-size:12px;font-weight:500;opacity:.85">Step ${cookStep+1} of ${total}</span></div>
+      <button class="cook-close" onclick="exitCookMode()">✕</button>
+    </div>
+    <div class="cook-bar"><div class="cook-bar-fill" style="width:${pct}%"></div></div>
+    <div class="cook-body">
+      <div class="cook-step-num">STEP ${cookStep+1}</div>
+      <div class="cook-step-text">${stepText}</div>
+    </div>
+    <div class="cook-nav">
+      <button class="cook-nav-btn secondary" ${cookStep===0?"disabled":""} onclick="prevStep()">← Back</button>
+      <button class="cook-nav-btn" onclick="nextStep()">${cookStep===total-1?"Done ✓":"Next →"}</button>
+    </div>
+  </div>`;
+  return h;
+}
 
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function pickExcluding(arr,exclude){let r;let a=0;do{r=pick(arr);a++}while(a<30&&exclude.includes(r.n));return r}
@@ -314,8 +445,9 @@ function renderDetail(){
   h+=`<button class="back-btn" onclick="openRecipe=null;tab=prevTab;render()">\u2190 Back</button><div class="detail-wrap">`;
   h+=`<div class="card-tags" style="margin-bottom:12px">${r.cat.map(c=>`<span class="card-tag">${c}</span>`).join("")}${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.tags.map(t=>`<span class="card-tag">${t}</span>`).join("")}</div>`;
   if(r.serves){const sc=Math.round(r.serves*s);h+=`<div class="servings-ctrl"><span>Servings</span><button class="serv-btn" onclick="if(servingsScale>0.5){servingsScale=Math.round((servingsScale-0.5)*10)/10;render()}">\u2212</button><span class="serv-num">${sc}</span><button class="serv-btn" onclick="servingsScale=Math.round((servingsScale+0.5)*10)/10;render()">+</button></div>`}
+  h+=`<button class="start-cook-btn" onclick="enterCookMode()">\u{1F373} Start Cooking</button>`;
   h+=`<div class="detail-section">Ingredients</div>`;r.ing.forEach(i=>{h+=`<div class="ingredient">${scaleAmount(i,s)}</div>`});
-  h+=`<div class="detail-section">Method</div>`;r.steps.forEach((st,i)=>{h+=`<div class="step"><span class="step-num">${i+1}</span><span>${st}</span></div>`});
+  h+=`<div class="detail-section">Method</div>`;r.steps.forEach((st,i)=>{h+=`<div class="step"><span class="step-num">${i+1}</span><span>${annotateStep(st)}</span></div>`});
   if(r.tips&&r.tips.length)r.tips.forEach(t=>{h+=`<div class="tip-box">\u{1F4A1} ${t}</div>`});
   h+=`</div>`;return h;
 }
@@ -357,6 +489,11 @@ function renderShop(){
 }
 
 function render(){
+  // Cook Mode is a full-screen takeover — bypass the standard chrome.
+  if(cookMode&&openRecipe!==null){
+    document.getElementById("app").innerHTML=renderCookMode()+renderTimerBar();
+    return;
+  }
   let h=`<div class="app-wrap">`;
   if(openRecipe!==null)h+=renderDetail();
   else if(tab==="recipes")h+=renderRecipes();
@@ -367,6 +504,7 @@ function render(){
   h+=`<button class="tab ${tab==='plan'?'active':''}" onclick="tab='plan';openRecipe=null;render()"><div class="tab-icon">\u{1F4C5}</div><span>Plan</span></button>`;
   h+=`<button class="tab ${tab==='shop'?'active':''}" onclick="tab='shop';openRecipe=null;render()"><div class="tab-icon">\u{1F6D2}</div><span>Shop</span></button>`;
   h+=`</div>`;
+  h+=renderTimerBar();
   document.getElementById("app").innerHTML=h;
 }
 render();
