@@ -162,7 +162,9 @@ function decodePlan(hash){
 
 function sharePlan(){
   const code=encodePlan();
-  const url=window.location.origin+window.location.pathname+"#plan="+code;
+  // encodeURIComponent so the "|" separator survives messaging-app URL handling
+  // (WhatsApp/iMessage/etc. encode it as %7C, which broke decodePlan's split).
+  const url=window.location.origin+window.location.pathname+"#plan="+encodeURIComponent(code);
   if(navigator.share){
     navigator.share({title:"This week's meal plan",text:"Here's our meal plan for the week!",url:url}).catch(()=>{});
   }else{
@@ -174,9 +176,20 @@ function sharePlan(){
 (function(){
   const hash=window.location.hash;
   if(hash.startsWith("#plan=")){
-    const code=hash.slice(6);
+    // Decode in case the link was reflowed through a platform that percent-
+    // encoded the "|" or "," separators. decodeURIComponent is a no-op on
+    // already-decoded strings, so old plain-text links still work.
+    let code;
+    try{code=decodeURIComponent(hash.slice(6))}catch(e){code=hash.slice(6)}
     const decoded=decodePlan(code);
-    if(decoded){mealPlan=decoded;checkedItems={};tab="plan";savePlan();window.location.hash="";return}
+    if(decoded){
+      mealPlan=decoded;checkedItems={};tab="plan";savePlan();
+      // Use replaceState rather than setting hash="" so the URL doesn't keep
+      // a bare "#" hanging on the end.
+      if(history.replaceState)history.replaceState(null,"",window.location.pathname+window.location.search);
+      else window.location.hash="";
+      return;
+    }
   }
   loadPlan();
 })();
@@ -357,6 +370,14 @@ function render(){
   document.getElementById("app").innerHTML=h;
 }
 render();
+
+// Register service worker for offline use. Relative path so it works at any
+// subpath (e.g. cornishollie.github.io/recipes/).
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
