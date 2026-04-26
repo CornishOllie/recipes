@@ -99,6 +99,13 @@ input{font-family:inherit;-webkit-appearance:none}
 .timer-bar.has-tabs{bottom:60px}
 .timer-bar .timer-chip{background:rgba(255,255,255,.25);color:#fff;border-color:rgba(255,255,255,.4)}
 .timer-bar .timer-chip.done{background:#FEE2E2;color:#991B1B;border-color:#EF4444}
+.fav-btn{background:transparent;border:none;font-size:20px;padding:4px 6px;cursor:pointer;line-height:1;color:#CBD5E1}
+.fav-btn.on{color:#EF4444}
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-left:8px;flex-shrink:0}
+.detail-actions{display:flex;gap:8px;margin-top:8px}
+.action-btn{background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.action-btn .heart{font-size:14px}
+.action-btn.on{background:#fff;color:#EF4444}
 </style>
 </head>
 <body>
@@ -142,10 +149,47 @@ const R=[
 
 const SNACKS=["Greek yoghurt + berries + seeds (~180 kcal)","Banana + almond butter (~220 kcal)","Mixed nuts (~170 kcal)","Apple + almond butter (~200 kcal)","Avocado on sourdough (~250 kcal)"];
 const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-const CATS=[{id:"all",label:"All",em:"\u{1F4CB}"},{id:"breakfast",label:"Breakfast",em:"\u{1F373}"},{id:"lunch",label:"Lunch",em:"\u{1F957}"},{id:"dinner",label:"Dinner",em:"\u{1F37D}\uFE0F"},{id:"batch-cook",label:"Batch",em:"\u{1F372}"},{id:"pressure-cooker",label:"Pressure",em:"\u2668\uFE0F"},{id:"air-fryer",label:"Air Fryer",em:"\u{1F35F}"},{id:"sides",label:"Sides",em:"\u{1F966}"}];
+const CATS=[{id:"all",label:"All",em:"\u{1F4CB}"},{id:"favourites",label:"Favs",em:"❤️"},{id:"breakfast",label:"Breakfast",em:"\u{1F373}"},{id:"lunch",label:"Lunch",em:"\u{1F957}"},{id:"dinner",label:"Dinner",em:"\u{1F37D}\uFE0F"},{id:"batch-cook",label:"Batch",em:"\u{1F372}"},{id:"pressure-cooker",label:"Pressure",em:"\u2668\uFE0F"},{id:"air-fryer",label:"Air Fryer",em:"\u{1F35F}"},{id:"sides",label:"Sides",em:"\u{1F966}"},{id:"vegan",label:"Vegan",em:"\u{1F331}"},{id:"gluten-free",label:"GF",em:"\u{1F33E}"},{id:"dairy-free",label:"DF",em:"\u{1F95B}"}];
 
 let tab="recipes",activeCat="all",searchTerm="",openRecipe=null,prevTab="recipes",servingsScale=1,mealPlan=null,checkedItems={};
 let cookMode=false,cookStep=0,wakeLockSentinel=null,activeTimers=[],timerTickerId=null,audioCtx=null;
+let favs=[];
+
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
+function findRecipeBySlug(s){return R.findIndex(r=>slug(r.n)===s)}
+function loadFavs(){try{const f=localStorage.getItem("or_favs");if(f)favs=JSON.parse(f)||[]}catch(e){}}
+function saveFavs(){try{localStorage.setItem("or_favs",JSON.stringify(favs))}catch(e){}}
+function isFav(r){return favs.includes(slug(r.n))}
+function toggleFav(name){
+  const sl=slug(name);
+  if(favs.includes(sl))favs=favs.filter(x=>x!==sl);
+  else favs.push(sl);
+  saveFavs();render();
+}
+
+// Diet auto-detection from ingredients. Imperfect but good enough for first cut —
+// users can correct individual recipes later by tweaking ingredient wording.
+const GLUTEN_KW=["wrap","tortilla","sourdough","bread","pitta","bun","couscous","noodle","flour"];
+const DAIRY_KW=["feta","halloumi","cheddar","cheese","yoghurt","cream","milk","parmesan","ghee"];
+function isGlutenFree(r){return !r.ing.some(i=>{const s=i.toLowerCase();return GLUTEN_KW.some(w=>s.includes(w))})}
+function isDairyFree(r){
+  return !r.ing.some(i=>{
+    const s=i.toLowerCase();
+    if(DAIRY_KW.some(w=>s.includes(w)))return true;
+    // "butter" alone = dairy, but "almond butter" / "peanut butter" are not.
+    if(/\bbutter\b/.test(s)&&!/(almond|peanut|cashew|seed)\s+butter/.test(s))return true;
+    return false;
+  });
+}
+
+function shareRecipe(name){
+  const url=window.location.origin+window.location.pathname+"#recipe="+encodeURIComponent(slug(name));
+  if(navigator.share){
+    navigator.share({title:name,text:`Recipe: ${name}`,url:url}).catch(()=>{});
+  }else{
+    navigator.clipboard.writeText(url).then(()=>{alert("Link copied!")}).catch(()=>{prompt("Copy this link:",url)});
+  }
+}
 
 function savePlan(){try{localStorage.setItem("or_plan",JSON.stringify(mealPlan));localStorage.setItem("or_checked",JSON.stringify(checkedItems))}catch(e){}}
 function loadPlan(){try{const p=localStorage.getItem("or_plan");if(p)mealPlan=JSON.parse(p);const c=localStorage.getItem("or_checked");if(c)checkedItems=JSON.parse(c)}catch(e){}}
@@ -195,26 +239,26 @@ function sharePlan(){
   }
 }
 
-// Load: check URL hash first, then localStorage
+function cleanHash(){if(history.replaceState)history.replaceState(null,"",window.location.pathname+window.location.search);else window.location.hash=""}
+
+// Load: favs + plan from storage, then apply any hash overrides.
 (function(){
+  loadFavs();
+  loadPlan();
   const hash=window.location.hash;
   if(hash.startsWith("#plan=")){
     // Decode in case the link was reflowed through a platform that percent-
     // encoded the "|" or "," separators. decodeURIComponent is a no-op on
     // already-decoded strings, so old plain-text links still work.
-    let code;
-    try{code=decodeURIComponent(hash.slice(6))}catch(e){code=hash.slice(6)}
+    let code;try{code=decodeURIComponent(hash.slice(6))}catch(e){code=hash.slice(6)}
     const decoded=decodePlan(code);
-    if(decoded){
-      mealPlan=decoded;checkedItems={};tab="plan";savePlan();
-      // Use replaceState rather than setting hash="" so the URL doesn't keep
-      // a bare "#" hanging on the end.
-      if(history.replaceState)history.replaceState(null,"",window.location.pathname+window.location.search);
-      else window.location.hash="";
-      return;
-    }
+    if(decoded){mealPlan=decoded;checkedItems={};tab="plan";savePlan();cleanHash();return}
   }
-  loadPlan();
+  if(hash.startsWith("#recipe=")){
+    let s;try{s=decodeURIComponent(hash.slice(8))}catch(e){s=hash.slice(8)}
+    const idx=findRecipeBySlug(s);
+    if(idx>=0){openRecipe=idx;servingsScale=1;tab="recipes";cleanHash();return}
+  }
 })();
 
 // --- Cook Mode ---
@@ -327,7 +371,16 @@ function renderCookMode(){
 
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function pickExcluding(arr,exclude){let r;let a=0;do{r=pick(arr);a++}while(a<30&&exclude.includes(r.n));return r}
-function matches(r){if(activeCat!=="all"&&!r.cat.includes(activeCat))return false;if(!searchTerm)return true;const s=searchTerm.toLowerCase();return r.n.toLowerCase().includes(s)||r.tags.some(t=>t.includes(s))||r.vibe.some(v=>v.includes(s))||r.ing.some(i=>i.toLowerCase().includes(s))}
+function matches(r){
+  if(activeCat==="favourites"){if(!isFav(r))return false}
+  else if(activeCat==="vegan"){if(!r.tags.includes("vegan"))return false}
+  else if(activeCat==="gluten-free"){if(!isGlutenFree(r))return false}
+  else if(activeCat==="dairy-free"){if(!isDairyFree(r))return false}
+  else if(activeCat!=="all"&&!r.cat.includes(activeCat))return false;
+  if(!searchTerm)return true;
+  const s=searchTerm.toLowerCase();
+  return r.n.toLowerCase().includes(s)||r.tags.some(t=>t.includes(s))||r.vibe.some(v=>v.includes(s))||r.ing.some(i=>i.toLowerCase().includes(s));
+}
 function scaleAmount(t,s){if(s===1)return t;return t.replace(/(\d+\.?\d*)/g,m=>{const n=parseFloat(m)*s;return n%1===0?n.toString():n.toFixed(1)})}
 
 function generatePlan(){
@@ -434,14 +487,15 @@ function renderRecipes(){
   h+=`<div class="tags-row">${CATS.map(c=>`<button class="tag ${activeCat===c.id?'active':''}" onclick="activeCat='${c.id}';render()">${c.em} ${c.label}</button>`).join("")}</div>`;
   h+=`<div class="count-badge">${f.length} recipe${f.length!==1?'s':''}</div><div class="recipe-list">`;
   if(!f.length)h+=`<div class="empty-state"><div class="emoji">\u{1F50D}</div><p>Nothing found.</p></div>`;
-  f.forEach(r=>{const i=R.indexOf(r);h+=`<div class="recipe-card" onclick="prevTab='recipes';openRecipe=${i};servingsScale=1;render()"><div class="card-header"><span class="card-emoji">${r.e}</span><div class="card-info"><div class="card-title">${r.n}</div><div class="card-meta"><span>\u23F1 ${r.time}m</span><span>\u{1F465} ${r.serves}</span></div><div class="card-tags">${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.batch?'<span class="card-tag" style="background:#FEF3C7;color:#A16207">batch</span>':''}</div></div><div class="card-cals">~${r.cal}</div></div></div>`});
+  f.forEach(r=>{const i=R.indexOf(r);h+=`<div class="recipe-card" onclick="prevTab='recipes';openRecipe=${i};servingsScale=1;render()"><div class="card-header"><span class="card-emoji">${r.e}</span><div class="card-info"><div class="card-title">${r.n}</div><div class="card-meta"><span>\u23F1 ${r.time}m</span><span>\u{1F465} ${r.serves}</span></div><div class="card-tags">${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.batch?'<span class="card-tag" style="background:#FEF3C7;color:#A16207">batch</span>':''}</div></div><div class="card-right"><button class="fav-btn ${isFav(r)?'on':''}" onclick="event.stopPropagation();toggleFav('${r.n.replace(/'/g,"\\'")}')">${isFav(r)?'\u{2764}️':'\u{1F90D}'}</button><div class="card-cals">~${r.cal}</div></div></div></div>`});
   h+=`</div><button class="random-btn" onclick="prevTab='recipes';openRecipe=Math.floor(Math.random()*R.length);servingsScale=1;render()">\u{1F3B2}</button>`;
   return h;
 }
 
 function renderDetail(){
   const r=R[openRecipe],s=servingsScale;
-  let h=`<div class="app-header"><div class="app-title">${r.e} ${r.n}</div><div class="app-sub">~${r.cal} kcal \u00B7 ${r.time} mins</div></div>`;
+  const safeName=r.n.replace(/'/g,"\\'");
+  let h=`<div class="app-header"><div class="app-title">${r.e} ${r.n}</div><div class="app-sub">~${r.cal} kcal \u00B7 ${r.time} mins</div><div class="detail-actions"><button class="action-btn ${isFav(r)?'on':''}" onclick="toggleFav('${safeName}')"><span class="heart">${isFav(r)?'\u{2764}\uFE0F':'\u{1F90D}'}</span> ${isFav(r)?'Saved':'Save'}</button><button class="action-btn" onclick="shareRecipe('${safeName}')">\u{1F4E4} Share</button></div></div>`;
   h+=`<button class="back-btn" onclick="openRecipe=null;tab=prevTab;render()">\u2190 Back</button><div class="detail-wrap">`;
   h+=`<div class="card-tags" style="margin-bottom:12px">${r.cat.map(c=>`<span class="card-tag">${c}</span>`).join("")}${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.tags.map(t=>`<span class="card-tag">${t}</span>`).join("")}</div>`;
   if(r.serves){const sc=Math.round(r.serves*s);h+=`<div class="servings-ctrl"><span>Servings</span><button class="serv-btn" onclick="if(servingsScale>0.5){servingsScale=Math.round((servingsScale-0.5)*10)/10;render()}">\u2212</button><span class="serv-num">${sc}</span><button class="serv-btn" onclick="servingsScale=Math.round((servingsScale+0.5)*10)/10;render()">+</button></div>`}
