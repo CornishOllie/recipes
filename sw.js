@@ -3,7 +3,7 @@
 // - Network-first for navigations / index.html so deploys flow through quickly.
 // - Cache-first for static assets (manifest, icons, sw itself).
 // Bump CACHE_VERSION whenever the asset list changes to force a clean cache.
-const CACHE_VERSION = "v6-2026-04-26-creami";
+const CACHE_VERSION = "v7-2026-04-27-clarity-and-no-soak";
 const CACHE = `recipes-${CACHE_VERSION}`;
 const SHELL = [
   "./",
