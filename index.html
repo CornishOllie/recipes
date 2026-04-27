@@ -75,6 +75,9 @@ input{font-family:inherit;-webkit-appearance:none}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty-state .emoji{font-size:48px;margin-bottom:12px}
 .count-badge{text-align:center;padding:8px;font-size:13px;color:var(--muted)}
+.soak-toggle{margin:0 20px 12px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:#F1F5F9;border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.soak-toggle.on{background:var(--teal-light);color:#0D7466;font-weight:600}
+.soak-toggle input{accent-color:var(--teal);width:16px;height:16px;cursor:pointer}
 .random-btn{position:fixed;bottom:90px;right:20px;background:var(--teal);color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(0,168,150,.4);z-index:80}
 .snack-row{padding:10px 16px;background:#FEFCE8;font-size:13px;color:#A16207;font-weight:500;border-top:1px solid var(--border)}
 .start-cook-btn{display:block;width:100%;padding:16px;border-radius:12px;background:var(--teal);color:#fff;font-size:16px;font-weight:700;margin:16px 0;box-shadow:0 4px 12px rgba(0,168,150,.25)}
@@ -157,9 +160,9 @@ const R=[
 
 const SNACKS=["Greek yoghurt + berries + seeds (~180 kcal)","Banana + almond butter (~220 kcal)","Mixed nuts (~170 kcal)","Apple + almond butter (~200 kcal)","Avocado on sourdough (~250 kcal)"];
 const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-const CATS=[{id:"all",label:"All",em:"\u{1F4CB}"},{id:"favourites",label:"Favs",em:"❤️"},{id:"no-soak",label:"No-Soak",em:"\u{26A1}"},{id:"breakfast",label:"Breakfast",em:"\u{1F373}"},{id:"lunch",label:"Lunch",em:"\u{1F957}"},{id:"dinner",label:"Dinner",em:"\u{1F37D}\uFE0F"},{id:"batch-cook",label:"Batch",em:"\u{1F372}"},{id:"pressure-cooker",label:"Pressure",em:"\u2668\uFE0F"},{id:"air-fryer",label:"Air Fryer",em:"\u{1F35F}"},{id:"sides",label:"Sides",em:"\u{1F966}"},{id:"creami",label:"Creami",em:"\u{1F366}"},{id:"vegan",label:"Vegan",em:"\u{1F331}"},{id:"gluten-free",label:"GF",em:"\u{1F33E}"},{id:"dairy-free",label:"DF",em:"\u{1F95B}"}];
+const CATS=[{id:"all",label:"All",em:"\u{1F4CB}"},{id:"favourites",label:"Favs",em:"❤️"},{id:"breakfast",label:"Breakfast",em:"\u{1F373}"},{id:"lunch",label:"Lunch",em:"\u{1F957}"},{id:"dinner",label:"Dinner",em:"\u{1F37D}\uFE0F"},{id:"batch-cook",label:"Batch",em:"\u{1F372}"},{id:"pressure-cooker",label:"Pressure",em:"\u2668\uFE0F"},{id:"air-fryer",label:"Air Fryer",em:"\u{1F35F}"},{id:"sides",label:"Sides",em:"\u{1F966}"},{id:"creami",label:"Creami",em:"\u{1F366}"},{id:"vegan",label:"Vegan",em:"\u{1F331}"},{id:"gluten-free",label:"GF",em:"\u{1F33E}"},{id:"dairy-free",label:"DF",em:"\u{1F95B}"}];
 
-let tab="recipes",activeCat="all",searchTerm="",openRecipe=null,prevTab="recipes",servingsScale=1,mealPlan=null,checkedItems={};
+let tab="recipes",activeCat="all",searchTerm="",openRecipe=null,prevTab="recipes",servingsScale=1,mealPlan=null,checkedItems={},hideSoaking=false;
 let cookMode=false,cookStep=0,wakeLockSentinel=null,activeTimers=[],timerTickerId=null,audioCtx=null;
 let favs=[];
 
@@ -388,11 +391,12 @@ function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function pickExcluding(arr,exclude){let r;let a=0;do{r=pick(arr);a++}while(a<30&&exclude.includes(r.n));return r}
 function matches(r){
   if(activeCat==="favourites"){if(!isFav(r))return false}
-  else if(activeCat==="no-soak"){if(needsSoaking(r))return false}
   else if(activeCat==="vegan"){if(!r.tags.includes("vegan"))return false}
   else if(activeCat==="gluten-free"){if(!isGlutenFree(r))return false}
   else if(activeCat==="dairy-free"){if(!isDairyFree(r))return false}
   else if(activeCat!=="all"&&!r.cat.includes(activeCat))return false;
+  // Combinable filter: hide recipes that need overnight soaking.
+  if(hideSoaking&&needsSoaking(r))return false;
   if(!searchTerm)return true;
   const s=searchTerm.toLowerCase();
   return r.n.toLowerCase().includes(s)||r.tags.some(t=>t.includes(s))||r.vibe.some(v=>v.includes(s))||r.ing.some(i=>i.toLowerCase().includes(s));
@@ -501,6 +505,7 @@ function renderRecipes(){
   let h=`<div class="app-header"><div class="app-title">Ollie's Recipes</div><div class="app-sub">${R.length} recipes</div></div>`;
   h+=`<div class="search-bar"><input class="search-input" type="text" placeholder="Search name, ingredient, or vibe..." value="${searchTerm}" oninput="searchTerm=this.value;render()"></div>`;
   h+=`<div class="tags-row">${CATS.map(c=>`<button class="tag ${activeCat===c.id?'active':''}" onclick="activeCat='${c.id}';render()">${c.em} ${c.label}</button>`).join("")}</div>`;
+  h+=`<label class="soak-toggle ${hideSoaking?'on':''}"><input type="checkbox" ${hideSoaking?'checked':''} onchange="hideSoaking=this.checked;render()"> ⚡ Hide overnight-soak recipes</label>`;
   h+=`<div class="count-badge">${f.length} recipe${f.length!==1?'s':''}</div><div class="recipe-list">`;
   if(!f.length)h+=`<div class="empty-state"><div class="emoji">\u{1F50D}</div><p>Nothing found.</p></div>`;
   f.forEach(r=>{const i=R.indexOf(r);h+=`<div class="recipe-card" onclick="prevTab='recipes';openRecipe=${i};servingsScale=1;render()"><div class="card-header"><span class="card-emoji">${r.e}</span><div class="card-info"><div class="card-title">${r.n}</div><div class="card-meta"><span>\u23F1 ${r.time}m</span><span>\u{1F465} ${r.serves}</span></div><div class="card-tags">${r.vibe.map(v=>`<span class="card-tag">${v}</span>`).join("")}${r.batch?'<span class="card-tag" style="background:#FEF3C7;color:#A16207">batch</span>':''}</div></div><div class="card-right"><button class="fav-btn ${isFav(r)?'on':''}" onclick="event.stopPropagation();toggleFav('${r.n.replace(/'/g,"\\'")}')">${isFav(r)?'\u{2764}️':'\u{1F90D}'}</button><div class="card-cals">~${r.cal}</div></div></div></div>`});
