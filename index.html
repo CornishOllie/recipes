@@ -121,8 +121,11 @@ input{font-family:inherit;-webkit-appearance:none}
     <input id="gateNameInput" type="text" placeholder="your name (e.g. Jenny)" autocomplete="off" style="width:100%;margin-top:8px;padding:12px 14px;border-radius:10px;border:1px solid #E2E8F0;font-size:16px;background:#FAFBFC;outline:none">
     <button id="gateBtn" style="width:100%;margin-top:14px;padding:12px;border-radius:10px;background:#00A896;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer">Continue</button>
     <button id="gateSkipBtn" style="width:100%;margin-top:6px;padding:8px;background:none;color:#94A3B8;font-size:12px;border:none;cursor:pointer">Skip — just this device</button>
+    <button id="gateDisconnectBtn" style="display:none;width:100%;margin-top:6px;padding:8px;background:none;color:#DC2626;font-size:12px;border:none;cursor:pointer">Disconnect</button>
+    <button id="gateCloseBtn" style="display:none;width:100%;margin-top:4px;padding:6px;background:none;color:#94A3B8;font-size:12px;border:none;cursor:pointer">Close</button>
   </div>
 </div>
+<button id="cloudBtn" type="button" aria-label="Cloud sync settings" style="display:none;position:fixed;top:calc(env(safe-area-inset-top) + 12px);right:14px;z-index:150;background:rgba(255,255,255,.22);backdrop-filter:saturate(140%) blur(8px);-webkit-backdrop-filter:saturate(140%) blur(8px);color:#fff;padding:6px 10px;border-radius:14px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;gap:5px"><span id="cloudBtnIcon">☁️</span><span id="cloudBtnText">Sync</span></button>
 <div id="app"></div>
 <script>
 const R=[
@@ -627,21 +630,70 @@ if("serviceWorker" in navigator){
   const setMyName = (n) => localStorage.setItem(NAME_KEY, n);
   const isSkipped = () => localStorage.getItem(SKIP_KEY) === '1';
 
+  function updateCloudBtn() {
+    const btn = document.getElementById('cloudBtn');
+    const icon = document.getElementById('cloudBtnIcon');
+    const text = document.getElementById('cloudBtnText');
+    if (!btn) return;
+    btn.style.display = 'flex';
+    if (getCode()) {
+      icon.textContent = '☁️';
+      const name = getMyName();
+      text.textContent = name ? name : 'Synced';
+      btn.style.background = 'rgba(255,255,255,.22)';
+    } else {
+      icon.textContent = '⛅';
+      text.textContent = 'Connect';
+      btn.style.background = 'rgba(255,255,255,.32)';
+    }
+  }
+
   function showGate() {
     const gate = document.getElementById('gate');
+    const connected = !!getCode();
     gate.style.display = 'flex';
+
+    // Pre-fill if reconnecting
+    if (connected) {
+      document.getElementById('gateCodeInput').value = getCode();
+      document.getElementById('gateNameInput').value = getMyName();
+    } else {
+      document.getElementById('gateCodeInput').value = '';
+      document.getElementById('gateNameInput').value = '';
+    }
+
+    // Show / hide buttons based on state
+    document.getElementById('gateSkipBtn').style.display = connected ? 'none' : 'block';
+    document.getElementById('gateDisconnectBtn').style.display = connected ? 'block' : 'none';
+    document.getElementById('gateCloseBtn').style.display = connected ? 'block' : 'none';
+
     document.getElementById('gateCodeInput').focus();
+
     document.getElementById('gateBtn').onclick = () => {
       const code = document.getElementById('gateCodeInput').value.trim();
       const name = document.getElementById('gateNameInput').value.trim();
       if (code.length < 4) { alert('Family code needs at least 4 characters.'); return; }
       setCode(code);
       if (name) setMyName(name);
+      localStorage.removeItem(SKIP_KEY);
       gate.style.display = 'none';
+      updateCloudBtn();
       bootstrap();
     };
     document.getElementById('gateSkipBtn').onclick = () => {
       localStorage.setItem(SKIP_KEY, '1');
+      gate.style.display = 'none';
+      updateCloudBtn();
+    };
+    document.getElementById('gateDisconnectBtn').onclick = () => {
+      if (!confirm('Disconnect from cloud sync? Your local data stays on this device.')) return;
+      localStorage.removeItem(CODE_KEY);
+      localStorage.removeItem(NAME_KEY);
+      localStorage.setItem(SKIP_KEY, '1');
+      gate.style.display = 'none';
+      updateCloudBtn();
+    };
+    document.getElementById('gateCloseBtn').onclick = () => {
       gate.style.display = 'none';
     };
     document.getElementById('gateCodeInput').addEventListener('keydown', (e) => {
@@ -753,6 +805,23 @@ if("serviceWorker" in navigator){
   function bootstrap() {
     if (!getCode()) return;
     loadCloud().then(subscribeRealtime);
+  }
+
+  // Floating cloud button: visible always; tap to open gate.
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('cloudBtn');
+    if (btn) {
+      btn.onclick = showGate;
+      updateCloudBtn();
+    }
+  });
+  // In case DOMContentLoaded already fired
+  if (document.readyState !== 'loading') {
+    const btn = document.getElementById('cloudBtn');
+    if (btn) {
+      btn.onclick = showGate;
+      updateCloudBtn();
+    }
   }
 
   if (getCode()) {
